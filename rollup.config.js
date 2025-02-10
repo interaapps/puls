@@ -4,7 +4,6 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import fs from "fs";
 import dts from "rollup-plugin-dts";
-import { terser } from "rollup-plugin-terser"; // Optional for minification
 
 const packagesDir = "packages"; // Adjust if your workspaces are elsewhere
 const distDir = "dist";
@@ -185,8 +184,7 @@ const configs = [
                         importHelpers: false, // Prevents tslib from being imported
                         noEmitHelpers: true, // Avoids extra helper imports
                     },
-                }),
-                terser(), // Minifies the output
+                })
             ],
             external: [], // 🚀 Ensures all dependencies are bundled inside
         },
