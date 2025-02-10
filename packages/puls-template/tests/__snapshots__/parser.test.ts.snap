@@ -1,0 +1,224 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parser-attributes 1`] = `
+[
+  {
+    "attributes": [
+      [
+        "id",
+        "title",
+      ],
+      [
+        "class",
+        "Hello World",
+      ],
+    ],
+    "body": [
+      {
+        "type": "text",
+        "value": "Hello World!",
+      },
+    ],
+    "from": 0,
+    "tag": "h1",
+    "to": 52,
+    "type": "element",
+  },
+]
+`;
+
+exports[`parser-full-html 1`] = `
+[
+  {
+    "attributes": [
+      [
+        "html",
+        true,
+      ],
+    ],
+    "body": [],
+    "from": 9,
+    "tag": "!doctype",
+    "to": 24,
+    "type": "element",
+  },
+  {
+    "attributes": [
+      [
+        "lang",
+        "en",
+      ],
+    ],
+    "body": [
+      {
+        "attributes": [],
+        "body": [
+          {
+            "attributes": [
+              [
+                "charset",
+                "UTF-8",
+              ],
+            ],
+            "body": [],
+            "from": 73,
+            "tag": "meta",
+            "to": 95,
+            "type": "element",
+          },
+          {
+            "attributes": [
+              [
+                "name",
+                "viewport",
+              ],
+              [
+                "content",
+                "width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0",
+              ],
+            ],
+            "body": [],
+            "from": 117,
+            "tag": "meta",
+            "to": 243,
+            "type": "element",
+          },
+          {
+            "attributes": [
+              [
+                "http-equiv",
+                "X-UA-Compatible",
+              ],
+              [
+                "content",
+                "ie=edge",
+              ],
+            ],
+            "body": [],
+            "from": 277,
+            "tag": "meta",
+            "to": 330,
+            "type": "element",
+          },
+          {
+            "attributes": [],
+            "body": [
+              {
+                "type": "text",
+                "value": "Document",
+              },
+            ],
+            "from": 352,
+            "tag": "title",
+            "to": 375,
+            "type": "element",
+          },
+        ],
+        "from": 58,
+        "tag": "head",
+        "to": 391,
+        "type": "element",
+      },
+      {
+        "attributes": [],
+        "body": [
+          {
+            "attributes": [],
+            "body": [
+              {
+                "type": "text",
+                "value": "Hello World!",
+              },
+            ],
+            "from": 417,
+            "tag": "h1",
+            "to": 438,
+            "type": "element",
+          },
+        ],
+        "from": 400,
+        "tag": "body",
+        "to": 454,
+        "type": "element",
+      },
+    ],
+    "from": 33,
+    "tag": "html",
+    "to": 466,
+    "type": "element",
+  },
+]
+`;
+
+exports[`parser-function-attributes 1`] = `
+[
+  {
+    "attributes": [
+      [
+        "@click",
+        [Function],
+      ],
+    ],
+    "body": [
+      {
+        "type": "text",
+        "value": "Click me",
+      },
+    ],
+    "from": 9,
+    "tag": "button",
+    "to": 43,
+    "type": "element",
+  },
+]
+`;
+
+exports[`parser-h1-element 1`] = `
+[
+  {
+    "attributes": [],
+    "body": [
+      {
+        "type": "text",
+        "value": "Hello World!",
+      },
+    ],
+    "from": 0,
+    "tag": "h1",
+    "to": 21,
+    "type": "element",
+  },
+]
+`;
+
+exports[`parser-interpolation-attributes 1`] = `
+[
+  {
+    "attributes": [
+      [
+        "id",
+        "hello-world",
+      ],
+    ],
+    "body": [
+      {
+        "type": "text",
+        "value": "I'm a div",
+      },
+    ],
+    "from": 9,
+    "tag": "div",
+    "to": 34,
+    "type": "element",
+  },
+]
+`;
+
+exports[`parser-text 1`] = `
+[
+  {
+    "type": "text",
+    "value": "Hello",
+  },
+]
+`;
