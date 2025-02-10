@@ -4,7 +4,6 @@
 npm install pulsjs
 ```
 
-
 ```js
 import { html, appendTo, state } from 'pulsjs'
 
@@ -18,8 +17,62 @@ appendTo(document.body, html`
 ```
 
 
-# Extensions
-## SCSS
+## State
+```js
+import { state, computed, html, appendTo } from 'pulsjs'
+
+const name = state('John')
+
+const computedValue = computed(() => `I'm happy that you are named ${name.value}`)
+
+appendTo(document.body, html`
+    <h1>Hello ${name}!</h1>
+    
+    ${computedValue}
+    
+    <input :bind=${name}>
+`)
+```
+
+## Components
+### Functions
+```js
+import { html } from 'pulsjs'
+
+function ExampleComponent(props) {
+    return html`
+        <p>Example component</p>
+    `
+}
+
+html`
+    <${ExampleComponent} />
+`
+```
+### Class components
+```js
+import { html } from 'pulsjs'
+
+class ExampleComponent extends PulsComponent {
+    setup() {
+        console.log('Setup')
+    }
+    
+    render() {
+        return html`
+            <p>Example component</p>
+        `
+    }
+}
+
+html`
+    <${ExampleComponent} />
+`
+```
+
+
+## Extensions
+### SCSS
 ```bash
 npm install pulsjs-scss
 ```
@@ -42,4 +95,19 @@ export class ExampleComponent extends PulsComponent {
         `
     }
 }
+```
+
+
+
+## Contributing
+Use pnpm
+
+### Build
+```bash
+pnpm run build
+```
+
+### Test
+```bash
+pnpm test
 ```
