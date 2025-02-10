@@ -19,7 +19,6 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.node-version'
           cache: 'pnpm'
 
       - run: pnpm install
@@ -40,7 +39,6 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.node-version'
           cache: 'pnpm'
 
       - run: pnpm install
