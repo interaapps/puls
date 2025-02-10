@@ -16,3 +16,30 @@ appendTo(document.body, html`
     <input :bind=${name}>
 `)
 ```
+
+
+# Extensions
+## SCSS
+```bash
+npm install pulsjs-scss
+```
+```js
+import { PulsComponent, html } from 'pulsjs'
+import { scss } from 'pulsjs-scss'
+
+export class ExampleComponent extends PulsComponent {
+    render() {
+        return html`
+            example
+        `
+    }
+    
+    styles() {
+        return scss`
+            example {
+                color: red;
+            }
+        `
+    }
+}
+```

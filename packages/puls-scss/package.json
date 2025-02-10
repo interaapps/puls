@@ -1,12 +1,17 @@
 {
-  "name": "pulsjs-css",
+  "name": "pulsjs-scss",
   "version": "1.0.2-prealpha",
+  "description": "",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
   "author": "Julian Gojani",
   "license": "MIT",
-  "description": "",
+  "dependencies": {
+    "sass": "^1.84.0"
+  },
   "exports": {
     ".": {
       "import": {
@@ -22,16 +27,15 @@
       "default": "index.ts"
     }
   },
-  "files": [
-    "dist/"
-  ],
+  "unpkg": "dist/index.browser.js",
+  "jsdelivr": "dist/index.browser.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/interaapps/puls.git"
   },
-  "main": "dist/index.js",
-  "unpkg": "dist/index.browser.js",
-  "jsdelivr": "dist/index.browser.js",
+  "files": [
+    "dist/"
+  ],
   "type": "module",
   "module": "dist/index.mjs"
 }

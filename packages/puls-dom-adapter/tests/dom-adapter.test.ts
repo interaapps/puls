@@ -1,15 +1,16 @@
-import {PulsDOMAdapter} from "../src/PulsDOMAdapter";
-import {TemplateParser} from "pulsjs-template";
+import {PulsDOMAdapter} from "../index";
+import {createTemplateFunction} from "pulsjs-template";
 
+const html = createTemplateFunction()
 test('dom-adapter-test', () => {
-    const d = new PulsDOMAdapter(TemplateParser.fromTemplate`test`.parse())
+    const d = new PulsDOMAdapter(html`test`.parse())
 
     const [el] = d.render()
     expect(el.textContent).toMatchSnapshot()
 })
 
 test('dom-adapter-full', () => {
-    const d = new PulsDOMAdapter(TemplateParser.fromTemplate`
+    const d = new PulsDOMAdapter(html`
         <div>
             <h1>Hello, World!</h1>
             <p>${'test'}</p>

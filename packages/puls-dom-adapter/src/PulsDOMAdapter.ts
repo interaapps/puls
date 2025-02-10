@@ -19,7 +19,25 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
 
     partTransformers: Record<string, (part: ParserOutput) => any> = {
         'text': (part) => [this.document.createTextNode((part as ParserText).value)],
-        'element': (part) => [this.createElement(part as ParserTag)],
+        'element': (part) => {
+            const conf = part as ParserTag
+            if (typeof conf.tag === 'function') {
+                if ('prototype' in conf.tag && conf.tag.prototype instanceof HTMLElement) {
+                    return this.createFromValue(new (conf.tag as CustomElementConstructor)())
+                }
+
+                return this.createFromValue((conf.tag as (values: any) => any)({
+                    ...conf.attributes
+                }))
+            } else if (conf.tag.includes('-') && window?.customElements) {
+                const customElement = window.customElements.get(conf.tag)
+                if (customElement) {
+                    return this.createFromValue(new customElement())
+                }
+            }
+
+            return [this.createElement(part as ParserTag)]
+        },
         'value': (part) => this.createFromValue((part as ParserValue).value)
     }
 
@@ -129,10 +147,10 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
     }
 
     createElement(value: ParserTag): Node {
-        let el: Element = this.document.createElement(value.tag)
+        let el: Element = this.document.createElement(value.tag as string)
 
         if (value.tag === 'svg' || this.inSVG) {
-            el = this.document.createElementNS('http://www.w3.org/2000/svg', value.tag)
+            el = this.document.createElementNS('http://www.w3.org/2000/svg', value.tag as string)
             this.inSVG = true
         }
 

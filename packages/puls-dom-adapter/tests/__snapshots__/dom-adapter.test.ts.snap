@@ -1,3 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`dom-adapter-full 1`] = `"<h1>Hello, World!</h1><p>test</p>"`;
+
+exports[`dom-adapter-test 1`] = `"test"`;

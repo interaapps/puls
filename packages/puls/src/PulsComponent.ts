@@ -1,7 +1,7 @@
 import {appendTo, Hook} from "../index";
-import {HookListener} from "pulsjs-state/src/Hook";
+import {HookListener} from "pulsjs-state";
 
-export type JDOMComponentOptions = {
+export type PulsComponentOptions = {
     shadowed?: boolean;
     style?: string | null;
 };
@@ -9,14 +9,14 @@ export type AttributeOptions = {
     name?: string | null | undefined;
 };
 
-export class JDOMComponent extends HTMLElement {
+export class PulsComponent extends HTMLElement {
     mainElement: ShadowRoot|HTMLElement|null = null
 
     #jdomConnectedAlready: boolean = false
 
     attributeListeners: { key: string, options: AttributeOptions }[] = []
 
-    constructor(public options: JDOMComponentOptions = {}) {
+    constructor(public options: PulsComponentOptions = {}) {
         super()
         this.options = options
 
@@ -143,9 +143,9 @@ export class JDOMComponent extends HTMLElement {
     }
 
     /**
-     * @type {typeof JDOMComponent}
+     * @type {typeof PulsComponent}
      */
-    static unshadowed = class JDOMUnshadowedComponent extends JDOMComponent {
+    static unshadowed = class JDOMUnshadowedComponent extends PulsComponent {
         constructor(options = {}) {
             super({ shadowed: false, ...options })
         }

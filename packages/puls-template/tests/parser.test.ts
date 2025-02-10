@@ -1,19 +1,21 @@
-import TemplateParser from "../src/TemplateParser";
+import {createTemplateFunction} from "../index";
 
+
+const html = createTemplateFunction()
 test('parser-text', () => {
-    expect((TemplateParser.fromTemplate`Hello`).parse()).toMatchSnapshot()
+    expect((html`Hello`).parse()).toMatchSnapshot()
 })
 
 test('parser-h1-element', () => {
-    expect(TemplateParser.fromTemplate`<h1>Hello World!</h1>`.parse()).toMatchSnapshot()
+    expect(html`<h1>Hello World!</h1>`.parse()).toMatchSnapshot()
 })
 
 test('parser-attributes', () => {
-    expect(TemplateParser.fromTemplate`<h1 id="title" class="Hello World">Hello World!</h1>`.parse()).toMatchSnapshot()
+    expect(html`<h1 id="title" class="Hello World">Hello World!</h1>`.parse()).toMatchSnapshot()
 })
 
 test('parser-full-html', () => {
-    expect(TemplateParser.fromTemplate`
+    expect(html`
         <!doctype html>
         <html lang="en">
         <head>
@@ -30,14 +32,14 @@ test('parser-full-html', () => {
 
 test('parser-interpolation-attributes', () => {
     const a = () => alert('test')
-    expect(TemplateParser.fromTemplate`
+    expect(html`
         <div id=${'hello-world'}>I'm a div</div>
     `.parse()).toMatchSnapshot()
 })
 
 test('parser-function-attributes', () => {
     const a = () => alert('test')
-    expect(TemplateParser.fromTemplate`
+    expect(html`
         <button @click=${a}>Click me</button>
     `.parse()).toMatchSnapshot()
 })

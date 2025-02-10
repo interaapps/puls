@@ -1,14 +1,40 @@
 {
   "name": "pulsjs-adapter",
-  "version": "1.0.1-prealpha",
-  "main": "index.js",
+  "version": "1.0.2-prealpha",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Julian Gojani",
+  "license": "MIT",
   "description": "",
   "dependencies": {
     "pulsjs-template": "workspace:*"
-  }
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "node": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "default": "index.ts"
+    }
+  },
+  "files": [
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
+  "main": "dist/index.js",
+  "unpkg": "dist/index.browser.js",
+  "jsdelivr": "dist/index.browser.js",
+  "type": "module",
+  "module": "dist/index.mjs"
 }

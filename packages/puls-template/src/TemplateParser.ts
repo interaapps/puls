@@ -50,7 +50,7 @@ export class TemplateParser extends TemplateParserBase {
             } else if (closingTag) {
                 break
             } else {
-                tag.body = this.readContent(['script', 'style'].includes(tag.tag), tag)
+                tag.body = this.readContent(['script', 'style'].includes(tag.tag as string), tag)
                 closingTag = true
                 this.next()
                 break
