@@ -44,7 +44,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - run: pnpm install
-      - run: pnpm publish -r
+      - run: pnpm publish --no-git-checks -r
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
@@ -65,6 +65,6 @@ jobs:
           registry-url: https://npm.pkg.github.com/
 
       - run: pnpm install
-      - run: pnpm publish -r
+      - run: pnpm publish --no-git-checks -r
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
