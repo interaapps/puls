@@ -7,5 +7,10 @@
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "pulsjs-dom-adapter": "workspace:*",
+    "pulsjs-state": "workspace:*",
+    "pulsjs-adapter": "workspace:*"
+  }
 }
