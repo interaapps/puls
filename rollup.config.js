@@ -112,6 +112,7 @@ const configs = workspaces.map((pkg) => ([
             format: "es"
         },
         plugins: [dts()],
+        external: (id) => !id.startsWith(".") && !id.startsWith('packages') && !path.isAbsolute(id), // Exclude external dependencies
     },
     {
         input: path.join(packagesDir, pkg, "index.ts"),
@@ -120,6 +121,7 @@ const configs = workspaces.map((pkg) => ([
             format: "es"
         },
         plugins: [dts()],
+        external: (id) => !id.startsWith(".") && !id.startsWith('packages') && !path.isAbsolute(id), // Exclude external dependencies
     }
 ]));
 

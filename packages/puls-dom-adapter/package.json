@@ -8,9 +8,9 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
+    "pulsjs-adapter": "workspace:*",
     "pulsjs-template": "workspace:*",
-    "pulsjs-state": "workspace:*",
-    "pulsjs-adapter": "workspace:*"
+    "pulsjs-state": "workspace:*"
   },
   "exports": {
     ".": {

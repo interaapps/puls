@@ -10,8 +10,7 @@
   "description": "",
   "dependencies": {
     "pulsjs-dom-adapter": "workspace:*",
-    "pulsjs-state": "workspace:*",
-    "pulsjs-template": "workspace:*"
+    "pulsjs-state": "workspace:*"
   },
   "exports": {
     ".": {
