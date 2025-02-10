@@ -1,6 +1,6 @@
 name: 'test'
 
-on: workflow_call
+on: commit
 
 permissions:
   contents: read # to fetch code (actions/checkout)
