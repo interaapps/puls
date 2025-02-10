@@ -9,10 +9,61 @@ import { terser } from "rollup-plugin-terser"; // Optional for minification
 const packagesDir = "packages"; // Adjust if your workspaces are elsewhere
 const distDir = "dist";
 
-// Get all workspaces with an index.ts entry
+
 const workspaces = fs
     .readdirSync(packagesDir)
     .filter((pkg) => fs.existsSync(path.join(packagesDir, pkg, "index.ts")));
+
+const packageJsons = workspaces.reduce((acc, pkg) => {
+    const packageJsonPath = path.join(packagesDir, pkg, "package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    acc[pkg] = packageJson;
+    return acc;
+}, {});
+
+// Build a dependency graph based on package.json dependencies
+function buildDependencyGraph() {
+    const graph = {};
+
+    // Create a graph where each package points to its dependencies
+    for (const pkg of workspaces) {
+        graph[pkg] = Object.keys(packageJsons[pkg].dependencies || {});
+    }
+
+    return graph;
+}
+
+// Topological sort (using Kahn's algorithm) to determine the correct build order
+function topologicalSort(graph) {
+    const sorted = [];
+    const visited = new Set();
+    const tempMark = new Set();
+
+    function visit(pkg) {
+        if (tempMark.has(pkg)) {
+            throw new Error(`Circular dependency detected: ${pkg}`);
+        }
+        if (!visited.has(pkg)) {
+            tempMark.add(pkg);
+            for (const dep of graph[pkg] || []) {
+                visit(dep);
+            }
+            tempMark.delete(pkg);
+            visited.add(pkg);
+            sorted.push(pkg);
+        }
+    }
+
+    for (const pkg of workspaces) {
+        visit(pkg);
+    }
+
+    return sorted.reverse(); // Reverse to get the correct order
+}
+
+const dependencyGraph = buildDependencyGraph();
+const sortedWorkspaces = topologicalSort(dependencyGraph).filter((pkg) => workspaces.includes(pkg));
+
 
 workspaces.forEach((pkg) => {
     const distPath = path.join(packagesDir, pkg, "dist");
@@ -22,7 +73,7 @@ workspaces.forEach((pkg) => {
     }
 });
 
-const configs = workspaces.map((pkg) => ([
+const configs = sortedWorkspaces.map((pkg) => ([
     // Commonjs
     {
         input: path.join(packagesDir, pkg, "index.ts"),
@@ -111,8 +162,13 @@ const configs = workspaces.map((pkg) => ([
             file: path.join(packagesDir, pkg, distDir, "index.d.ts"),
             format: "es"
         },
-        plugins: [dts()],
-        external: (id) => !id.startsWith(".") && !id.startsWith('packages') && !path.isAbsolute(id), // Exclude external dependencies
+        plugins: [dts({
+            compilerOptions: {
+                skipLibCheck: true,
+                allowJs: true
+            }
+        })],
+        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
     },
     {
         input: path.join(packagesDir, pkg, "index.ts"),
@@ -120,8 +176,41 @@ const configs = workspaces.map((pkg) => ([
             file: path.join(packagesDir, pkg, distDir, "index.d.mts"),
             format: "es"
         },
-        plugins: [dts()],
-        external: (id) => !id.startsWith(".") && !id.startsWith('packages') && !path.isAbsolute(id), // Exclude external dependencies
+        plugins: [dts({
+            compilerOptions: {
+                skipLibCheck: true,
+                allowJs: true
+            }
+        })],
+        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
+    },
+    {
+        input: path.join(packagesDir, pkg, "index.ts"),
+        output: {
+            file: path.join(packagesDir, pkg, distDir, "index.d.ts"),
+            format: "es"
+        },
+        plugins: [dts({
+            compilerOptions: {
+                skipLibCheck: true,
+                allowJs: true
+            }
+        })],
+        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
+    },
+    {
+        input: path.join(packagesDir, pkg, "index.ts"),
+        output: {
+            file: path.join(packagesDir, pkg, distDir, "index.d.mts"),
+            format: "es"
+        },
+        plugins: [dts({
+            compilerOptions: {
+                skipLibCheck: true,
+                allowJs: true
+            }
+        })],
+        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
     }
 ]));
 
