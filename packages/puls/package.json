@@ -11,6 +11,7 @@
   "dependencies": {
     "pulsjs-dom-adapter": "workspace:*",
     "pulsjs-state": "workspace:*",
+    "pulsjs-template": "workspace:*",
     "pulsjs-adapter": "workspace:*"
   },
   "exports": {

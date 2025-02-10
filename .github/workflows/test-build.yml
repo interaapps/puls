@@ -1,4 +1,4 @@
-name: pnpm Example Workflow
+name: Test the build process
 on:
   push:
 
@@ -13,7 +13,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.2.1
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
