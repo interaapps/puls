@@ -43,7 +43,8 @@ workspaces.forEach((pkg) => {
             "url": "git+https://github.com/interaapps/puls.git"
         };
         pkgJson.files = [
-            "dist/"
+            "dist/",
+            "package.json"
         ]
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n");
         console.log(`✅ Updated ${pkgJsonPath}`);

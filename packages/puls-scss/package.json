@@ -34,7 +34,8 @@
     "url": "git+https://github.com/interaapps/puls.git"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "package.json"
   ],
   "type": "module",
   "module": "dist/index.mjs"

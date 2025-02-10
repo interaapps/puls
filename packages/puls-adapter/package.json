@@ -26,7 +26,8 @@
     }
   },
   "files": [
-    "dist/"
+    "dist/",
+    "package.json"
   ],
   "repository": {
     "type": "git",

@@ -72,12 +72,18 @@ importers:
 
   packages/puls:
     dependencies:
+      pulsjs-adapter:
+        specifier: workspace:*
+        version: link:../puls-adapter
       pulsjs-dom-adapter:
         specifier: workspace:*
         version: link:../puls-dom-adapter
       pulsjs-state:
         specifier: workspace:*
         version: link:../puls-state
+      pulsjs-template:
+        specifier: workspace:*
+        version: link:../puls-template
 
   packages/puls-adapter:
     dependencies:

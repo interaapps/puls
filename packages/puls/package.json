@@ -9,8 +9,10 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "pulsjs-dom-adapter": "workspace:*",
-    "pulsjs-state": "workspace:*"
+    "pulsjs-adapter": "workspace:*",
+    "pulsjs-state": "workspace:*",
+    "pulsjs-template": "workspace:*",
+    "pulsjs-dom-adapter": "workspace:*"
   },
   "exports": {
     ".": {
@@ -28,7 +30,8 @@
     }
   },
   "files": [
-    "dist/"
+    "dist/",
+    "package.json"
   ],
   "repository": {
     "type": "git",

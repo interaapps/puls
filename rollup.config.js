@@ -64,16 +64,29 @@ function topologicalSort(graph) {
 const dependencyGraph = buildDependencyGraph();
 const sortedWorkspaces = topologicalSort(dependencyGraph).filter((pkg) => workspaces.includes(pkg));
 
+console.log(sortedWorkspaces)
 
-workspaces.forEach((pkg) => {
-    const distPath = path.join(packagesDir, pkg, "dist");
-    if (fs.existsSync(distPath)) {
-        fs.rmSync(distPath, { recursive: true, force: true });
-        console.log(`🗑️  Deleted ${distPath}`);
-    }
-});
+const configs = [
+    ...sortedWorkspaces.map((pkg) => ([
+        {
+            input: path.join(packagesDir, pkg, "index.ts"),
+            output: {
+                file: path.join(packagesDir, pkg, distDir, "index.d.ts"),
+                format: "es"
+            },
+            plugins: [dts()]
+        },
+        {
+            input: path.join(packagesDir, pkg, "index.ts"),
+            output: {
+                file: path.join(packagesDir, pkg, distDir, "index.d.mts"),
+                format: "es"
+            },
+            plugins: [dts()]
+        }
+    ])),
 
-const configs = sortedWorkspaces.map((pkg) => ([
+    ...sortedWorkspaces.map((pkg) => ([
     // Commonjs
     {
         input: path.join(packagesDir, pkg, "index.ts"),
@@ -100,35 +113,6 @@ const configs = sortedWorkspaces.map((pkg) => ([
             }),
         ],
         external: (id) => !id.startsWith(".") && !id.startsWith('packages') && !path.isAbsolute(id), // Exclude external dependencies
-    },
-
-    // Browser export
-    {
-        input: path.join(packagesDir, pkg, "index.ts"),
-        output: {
-            file: path.join(packagesDir, pkg, distDir, "index.global.js"),
-            format: "iife",
-            name: pkg.replaceAll('-', ''),
-            sourcemap: true,
-            globals: {
-                // Explicitly define global dependencies if necessary
-            },
-        },
-        plugins: [
-            resolve({ browser: true, preferBuiltins: false }), // Ensure all dependencies are bundled
-            commonjs({ requireReturnsDefault: "auto" }), // Convert CJS to ESM properly
-            typescript({
-                compilerOptions: {
-                    module: "ESNext",
-                    moduleResolution: "node",
-                    esModuleInterop: true, // Ensures compatibility with CJS modules
-                    importHelpers: false, // Prevents tslib from being imported
-                    noEmitHelpers: true, // Avoids extra helper imports
-                },
-            }),
-            terser(), // Minifies the output
-        ],
-        external: [], // 🚀 Ensures all dependencies are bundled inside
     },
 
     // ESM Output
@@ -162,12 +146,7 @@ const configs = sortedWorkspaces.map((pkg) => ([
             file: path.join(packagesDir, pkg, distDir, "index.d.ts"),
             format: "es"
         },
-        plugins: [dts({
-            compilerOptions: {
-                skipLibCheck: true,
-                allowJs: true
-            }
-        })],
+        plugins: [dts()],
         external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
     },
     {
@@ -176,42 +155,42 @@ const configs = sortedWorkspaces.map((pkg) => ([
             file: path.join(packagesDir, pkg, distDir, "index.d.mts"),
             format: "es"
         },
-        plugins: [dts({
-            compilerOptions: {
-                skipLibCheck: true,
-                allowJs: true
-            }
-        })],
+        plugins: [dts()],
         external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
     },
-    {
-        input: path.join(packagesDir, pkg, "index.ts"),
-        output: {
-            file: path.join(packagesDir, pkg, distDir, "index.d.ts"),
-            format: "es"
+])),
+
+    ...sortedWorkspaces.map((pkg) => ([
+
+        // Browser export
+        {
+            input: path.join(packagesDir, pkg, "index.ts"),
+            output: {
+                file: path.join(packagesDir, pkg, distDir, "index.global.js"),
+                format: "iife",
+                name: pkg.replaceAll('-', ''),
+                sourcemap: true,
+                globals: {
+                    // Explicitly define global dependencies if necessary
+                },
+            },
+            plugins: [
+                resolve({ browser: true, preferBuiltins: false }), // Ensure all dependencies are bundled
+                commonjs({ requireReturnsDefault: "auto" }), // Convert CJS to ESM properly
+                typescript({
+                    compilerOptions: {
+                        module: "ESNext",
+                        moduleResolution: "node",
+                        esModuleInterop: true, // Ensures compatibility with CJS modules
+                        importHelpers: false, // Prevents tslib from being imported
+                        noEmitHelpers: true, // Avoids extra helper imports
+                    },
+                }),
+                terser(), // Minifies the output
+            ],
+            external: [], // 🚀 Ensures all dependencies are bundled inside
         },
-        plugins: [dts({
-            compilerOptions: {
-                skipLibCheck: true,
-                allowJs: true
-            }
-        })],
-        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
-    },
-    {
-        input: path.join(packagesDir, pkg, "index.ts"),
-        output: {
-            file: path.join(packagesDir, pkg, distDir, "index.d.mts"),
-            format: "es"
-        },
-        plugins: [dts({
-            compilerOptions: {
-                skipLibCheck: true,
-                allowJs: true
-            }
-        })],
-        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
-    }
-]));
+    ]))
+];
 
 export default configs.flat();
