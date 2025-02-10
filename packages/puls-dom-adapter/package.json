@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-dom-adapter",
-  "version": "1.0.0-prealpha",
+  "version": "1.0.1-prealpha",
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
