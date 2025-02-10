@@ -59,9 +59,9 @@ importers:
 
   examples/example-ts-app:
     dependencies:
-      pulsjs-scss:
+      pulsjs:
         specifier: workspace:*
-        version: link:../../packages/puls-scss
+        version: link:../../packages/puls
     devDependencies:
       typescript:
         specifier: ~5.7.2
