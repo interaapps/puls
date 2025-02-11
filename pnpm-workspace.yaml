@@ -1,4 +1,5 @@
 packages:
   - 'packages/*'
   - 'examples/*'
+  - '!packages/create-puls/template-*'
   - '!packages/create-puls/template-*/**'
