@@ -19,11 +19,32 @@ workspaces.forEach((pkg) => {
     if (fs.existsSync(pkgJsonPath)) {
         const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"));
 
+        if (pkgJson.name === 'create-pulsjs') {
+            const templatesPath = path.join(packagesDir, 'create-puls')
+
+            for (const template of fs.readdirSync(templatesPath)
+                .filter((pkg) =>
+                    fs.existsSync(path.join(templatesPath, pkg, "package.json"))
+                )) {
+                const templatePkgJsonPath = path.join(templatesPath, template, "package.json");
+                const templatePkgJson = JSON.parse(fs.readFileSync(templatePkgJsonPath, "utf-8"));
+
+                for (const [key, value] of Object.entries(templatePkgJson.dependencies)) {
+                    if (key.startsWith('pulsjs')) {
+                        templatePkgJson.dependencies[key] = mainPackageJson.version
+                    }
+                }
+                fs.writeFileSync(templatePkgJsonPath, JSON.stringify(templatePkgJson, null, 2) + "\n");
+            }
+        }
+
+
         if (testingLocally) {
             pkgJson.main = 'index.ts';
             pkgJson.module = undefined
             pkgJson.exports = undefined;
             pkgJson.files = ["index.ts", "package.json"]
+            pkgJson.version = mainPackageJson.version;
         } else {
             pkgJson.main = 'dist/index.js';
             pkgJson.module = 'dist/index.mjs';
@@ -57,6 +78,11 @@ workspaces.forEach((pkg) => {
                 "dist/",
                 "package.json"
             ]
+
+            if (pkgJson.name === 'create-pulsjs') {
+                pkgJson.files.push('template-ts/')
+                pkgJson.files.push('template-js/')
+            }
         }
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n");
         console.log(`✅ Updated ${pkgJsonPath}`);

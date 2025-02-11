@@ -16,6 +16,12 @@
     "dist/",
     "package.json"
   ],
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
   "module": "dist/index.mjs",
   "exports": {
     ".": {
@@ -31,11 +37,5 @@
       },
       "default": "index.ts"
     }
-  },
-  "unpkg": "dist/index.global.js",
-  "jsdelivr": "dist/index.global.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/interaapps/puls.git"
   }
 }

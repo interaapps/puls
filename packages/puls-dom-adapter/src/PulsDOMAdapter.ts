@@ -1,5 +1,13 @@
 import { ParserOutput, ParserTag, ParserText, ParserValue } from "pulsjs-template";
-import {currentLifecycleHooks, PulsAdapter, resetLifecycleHooks} from "pulsjs-adapter";
+import {
+    currentLifecycleHooks,
+    OnMount,
+    OnMounted,
+    OnUnmount,
+    OnUnmounted,
+    PulsAdapter,
+    resetLifecycleHooks
+} from "pulsjs-adapter";
 
 export type ValueTransformer<T> = {
     type: string,
@@ -48,22 +56,21 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 if (lifeCycleHooks.setAny) {
                     lifeCycleComment = this.document.createComment('lifecycle')
 
-                    lifeCycleHooks.onMount.forEach(fn => fn())
-                    queueMicrotask(() => lifeCycleHooks.onMounted.forEach(fn => fn()));
+                    lifeCycleHooks.onMount.forEach((fn: OnMount) => fn())
 
                     if (lifeCycleHooks.onUnmount.length > 0 || lifeCycleHooks.onUnmounted.length > 0) {
                         const observer = new MutationObserver(mutations => {
                             mutations.forEach(mutation => {
                                 mutation.addedNodes.forEach(node => {
                                     if (node === lifeCycleComment) {
-                                        queueMicrotask(() => lifeCycleHooks.onMounted.forEach(fn => fn()));
+                                        queueMicrotask(() => lifeCycleHooks.onMounted.forEach((fn: OnMounted) => fn()));
                                     }
                                 });
 
                                 mutation.removedNodes.forEach(node => {
                                     if (node === lifeCycleComment) {
-                                        lifeCycleHooks.onUnmount.forEach(fn => fn())
-                                        queueMicrotask(() => lifeCycleHooks.onUnmounted.forEach(fn => fn()));
+                                        lifeCycleHooks.onUnmount.forEach((fn: OnUnmount) => fn())
+                                        queueMicrotask(() => lifeCycleHooks.onUnmounted.forEach((fn: OnUnmounted) => fn()));
                                         observer.disconnect()
                                     }
                                 });
