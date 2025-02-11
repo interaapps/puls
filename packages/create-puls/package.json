@@ -1,6 +1,6 @@
 {
   "name": "create-pulsjs",
-  "version": "1.0.5-prealpha",
+  "version": "1.0.6-prealpha",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
