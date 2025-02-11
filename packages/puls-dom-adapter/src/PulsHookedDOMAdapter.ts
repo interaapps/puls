@@ -47,8 +47,10 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             const listener = () => {
                 if (index()) {
                     if (overrideEl === comment || overrideEl === undefined) {
-                        parserTag.attributes = parserTag.attributes.filter(([k]) => k !== key)
-                        shownElement = this.createElement(parserTag) as Element
+                        shownElement = this.createElement({
+                            ...parserTag,
+                            attributes: parserTag.attributes.filter(([k]) => k !== key)
+                        }) as Element
 
                         if (overrideEl) {
                             this.replaceElement(overrideEl, shownElement)
@@ -73,9 +75,10 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         }
 
 
-        if (key === ':else' && this.controlFlows[this.currentControlFlow].length > 0 && this.controlFlowHooks[this.currentControlFlow]) {
+        if (key === ':else' && this.controlFlows[this.currentControlFlow]?.length > 0 && this.controlFlowHooks[this.currentControlFlow]) {
             const currentFlowId = this.currentControlFlow
-            return createIfListener(this.controlFlowHooks[this.currentControlFlow].map((c) => c).filter(c => c !== null), () => {
+            this.currentControlFlow = -1
+            return createIfListener(this.controlFlowHooks[currentFlowId].map((c) => c).filter(c => c !== null), () => {
                 for (let c of this.controlFlows[currentFlowId]) {
                     if (c) return false;
                 }
@@ -83,7 +86,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             })
         }
 
-        if (key === ':else-if' && this.controlFlows[this.currentControlFlow].length > 0 && this.controlFlowHooks[this.currentControlFlow]) {
+        if (key === ':else-if' && this.controlFlows[this.currentControlFlow]?.length > 0 && this.controlFlowHooks[this.currentControlFlow]) {
             const currentControlFlowId = this.currentControlFlow
             const cond = () => {
                 for (let c of this.controlFlows[currentControlFlowId]) {
@@ -92,7 +95,8 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
                 return value instanceof Hook ? value.value : value
             }
 
-            const ind = this.controlFlows.push(cond()) - 1
+            const ind = this.controlFlows[currentControlFlowId].push(cond()) - 1
+
             this.controlFlowHooks[this.currentControlFlow][ind] = value instanceof Hook ? value : null
 
             if (value && value instanceof Hook) {

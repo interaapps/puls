@@ -188,6 +188,10 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 }
             }
             if (key === ':else-if') {
+                if (typeof this.controlFlows[this.currentControlFlow] === 'undefined') {
+                    throw new Error('else-if without if')
+                }
+
                 let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
                 this.controlFlows[this.currentControlFlow].push(value)
 
@@ -196,15 +200,20 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 }
             }
             if (key === ':else') {
+                if (typeof this.controlFlows[this.currentControlFlow] === 'undefined') {
+                    throw new Error('else without if before')
+                }
+
                 let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
 
                 if (!isElse) {
                     return this.document.createComment('if')
                 }
             }
-
-            parserTag.attributes = parserTag.attributes.filter(([k]) => k !== key)
-            return this.createElement(parserTag)
+            return this.createElement({
+                ...parserTag,
+                attributes: parserTag.attributes.filter(([k]) => k !== key)
+            })
         }
 
         if (el === undefined) return;
