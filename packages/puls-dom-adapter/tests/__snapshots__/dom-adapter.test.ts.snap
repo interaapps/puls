@@ -1,5 +1,77 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`dom-adapter-full 1`] = `"<h1>Hello, World!</h1><p>test</p>"`;
+exports[`dom-adapter-attribute 1`] = `
+<div>
+  <h1
+    class="text-2xl font-bold"
+    id="test"
+    normal-value="hello world"
+    style="color: rgb(255, 255, 255);"
+  >
+    Hello, World
+                !
+  </h1>
+</div>
+`;
+
+exports[`dom-adapter-complex-html 1`] = `
+<div>
+  <html
+    lang="en"
+  >
+    <head>
+      <meta
+        charset="UTF-8"
+      />
+      <meta
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+        name="viewport"
+      />
+      <meta
+        content="ie=edge"
+        http-equiv="X-UA-Compatible"
+      />
+      <title>
+        Document
+      </title>
+    </head>
+    <body />
+  </html>
+</div>
+`;
+
+exports[`dom-adapter-full 1`] = `
+<div>
+  <h1>
+    Hello, World!
+  </h1>
+  <p>
+    test
+  </p>
+</div>
+`;
+
+exports[`dom-adapter-function-components 1`] = `
+<div>
+  <div>
+    Name is 
+    <span
+      id="name"
+    >
+      Jön
+    </span>
+  </div>
+</div>
+`;
+
+exports[`dom-adapter-nested 1`] = `
+<div>
+  <h1>
+    Hello World!
+  </h1>
+  
+        
+</div>
+`;
 
 exports[`dom-adapter-test 1`] = `"test"`;

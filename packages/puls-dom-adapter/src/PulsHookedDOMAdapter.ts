@@ -83,7 +83,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             })
         }
 
-        if (key === ':else-if' && this.controlFlows[this.currentControlFlow].length > 0) {
+        if (key === ':else-if' && this.controlFlows[this.currentControlFlow].length > 0 && this.controlFlowHooks[this.currentControlFlow]) {
             const currentControlFlowId = this.currentControlFlow
             const cond = () => {
                 for (let c of this.controlFlows[currentControlFlowId]) {

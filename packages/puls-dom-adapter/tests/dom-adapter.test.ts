@@ -18,5 +18,78 @@ test('dom-adapter-full', () => {
     `.parse())
 
     const [div] = d.render()
-    expect((div as HTMLElement).innerHTML).toMatchSnapshot()
+    expect(div).toMatchSnapshot()
+})
+test('dom-adapter-attribute', () => {
+    const d = new PulsDOMAdapter(html`
+        <div>
+            <h1 
+                style=${{
+                    color: '#FFF'
+                }}
+                class=${['text-2xl', 'font-bold']}
+                id=${'test'}
+                normal-value="hello world"
+            >
+                Hello, World
+                !</h1>
+            
+        </div>
+    `.parse())
+
+    const [div] = d.render()
+    expect(div).toMatchSnapshot()
+})
+
+test('dom-adapter-complex-html', () => {
+    const d = new PulsDOMAdapter(html`
+        <div>
+            <html lang="en">
+            <head>
+            <meta charset="UTF-8">
+                         <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+                                     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                         <title>Document</title>
+            </head>
+            <body>
+              
+            </body>
+            </html>
+        </div>
+    `.parse())
+
+    const [el] = d.render()
+    expect(el).toMatchSnapshot()
+})
+
+
+test('dom-adapter-nested', () => {
+    const d = new PulsDOMAdapter(html`
+        <div>
+            ${(new PulsDOMAdapter(html`
+                <h1>Hello World!</h1>
+            `.parse())).render()}
+        </div>
+    `.parse())
+
+    const [div] = d.render()
+    expect(div).toMatchSnapshot()
+})
+
+test('dom-adapter-function-components', () => {
+
+    const TestComponent = (props: {name: string}) => new PulsDOMAdapter(html`
+        <div>
+            Name is <span id="name">${props.name}</span>
+        </div>
+    `.parse()).render()
+
+    const d = new PulsDOMAdapter(html`
+        <div>
+            <${TestComponent} name="Jön" />
+        </div>
+    `.parse())
+
+    const [div] = d.render()
+    expect(div).toMatchSnapshot()
 })

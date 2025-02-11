@@ -1,5 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`dom-hook-adapter-full 1`] = `"<h1>Hello, World!</h1><p>John</p>"`;
+exports[`dom-hook-adapter-complex-html 1`] = `
+<html
+  lang="en"
+>
+  <head>
+    <meta
+      charset="UTF-8"
+    />
+    <meta
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+      name="viewport"
+    />
+    <meta
+      content="ie=edge"
+      http-equiv="X-UA-Compatible"
+    />
+    <title>
+      Document
+    </title>
+  </head>
+  <body />
+</html>
+`;
+
+exports[`dom-hook-adapter-full 1`] = `
+<div>
+  <h1>
+    Hello, World!
+  </h1>
+  <p>
+    John
+  </p>
+</div>
+`;
 
 exports[`dom-hook-adapter-test 1`] = `"test"`;

@@ -31,3 +31,16 @@ test("test-computed", (done) => {
 
     hook.value++
 })
+test("test-auto-computed", (done) => {
+    const hook = state(0)
+    const computedHook = computed(() => hook.value + 1)
+
+    expect(computedHook.value).toBe(1)
+
+    watch([computedHook], () => {
+        expect(computedHook.value).toBe(2)
+        done()
+    })
+
+    hook.value++
+})

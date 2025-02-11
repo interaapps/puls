@@ -1,4 +1,4 @@
-import { compileString } from 'sass'
+import sass from 'sass'
 
 const saved = new Map<number, string>()
 
@@ -26,7 +26,7 @@ export function scss(strings: TemplateStringsArray, ...values: any[]) {
 
     const hashed = hash(out)
     if (!saved.has(hashed)) {
-        saved.set(hashed, compileString(out).css)
+        saved.set(hashed, sass.compileString(out).css)
     }
 
     return saved.get(hashed)

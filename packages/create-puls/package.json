@@ -26,6 +26,12 @@
     "picocolors": "^1.1.1",
     "prompts": "^2.4.2"
   },
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
   "module": "dist/index.mjs",
   "exports": {
     ".": {
@@ -41,11 +47,5 @@
       },
       "default": "index.ts"
     }
-  },
-  "unpkg": "dist/index.global.js",
-  "jsdelivr": "dist/index.global.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/interaapps/puls.git"
   }
 }

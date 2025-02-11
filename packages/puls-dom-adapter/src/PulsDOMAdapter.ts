@@ -84,7 +84,10 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                     }
                 }
 
-                return [...(out || [this.document.createComment('')]), ...(lifeCycleComment ? [lifeCycleComment] : [])]
+                return [
+                    ...(out || [this.document.createComment('')]),
+                    ...(lifeCycleComment ? [lifeCycleComment] : [])
+                ]
             } else if (conf.tag.includes('-') && window?.customElements) {
                 const customElement = window.customElements.get(conf.tag)
                 if (customElement) {
@@ -177,14 +180,14 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
     }
 
     setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag): Node|undefined {
-        if (key === ':if' || key === ':if-else' || key === ':else') {
+        if (key === ':if' || key === ':else-if' || key === ':else') {
             if (key === ':if') {
                 this.currentControlFlow = this.controlFlows.push([value]) - 1
                 if (!value) {
                     return this.document.createComment('if')
                 }
             }
-            if (key === ':if-else') {
+            if (key === ':else-if') {
                 let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
                 this.controlFlows[this.currentControlFlow].push(value)
 
@@ -219,6 +222,12 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             }
             return;
         } else if (key === 'class' && typeof value === 'object') {
+            if (Array.isArray(value)) {
+                for (const v of value.flat()) {
+                    this.setElementClass(el, v, true)
+                }
+                return
+            }
             for (const [k, v] of Object.entries(value)) {
                 this.setElementClass(el, k, v)
             }

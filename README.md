@@ -1,9 +1,5 @@
 # PULS
 
-```bash
-npm install pulsjs
-```
-
 ```js
 import { html, appendTo, state } from 'pulsjs'
 
@@ -15,6 +11,26 @@ appendTo(document.body, html`
     <input :bind=${name}>
 `)
 ```
+
+## Installation
+```bash
+npm install pulsjs
+```
+
+### Create with Vite
+Create a typescript or javascript project with PulsJS and Vite 
+```bash
+npm create pulsjs my-app-name
+```
+
+### ESM import in browser
+```html
+<script type="module">
+    import { html, appendTo, state } from 'https://cdn.skypack.dev/pulsjs'
+    ...
+</script>
+```
+
 
 ## Feature overview
 - Puls uses the DOM directly (no virtual DOM)

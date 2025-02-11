@@ -1,0 +1,98 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`dom-control-flow-if-else-1 expects 0 1`] = `
+<div>
+  <div>
+    Hello World
+            
+  </div>
+  <!--if-->
+</div>
+`;
+
+exports[`dom-control-flow-if-else-2 expects 2 1`] = `
+<div>
+  <!--if-->
+  <div>
+    Hello World 2
+            
+  </div>
+</div>
+`;
+
+exports[`dom-control-flow-if-else-if-1 expects 0 1`] = `
+<div>
+  <div>
+    Hello World
+            
+  </div>
+  <!--if-->
+  <!--if-->
+</div>
+`;
+
+exports[`dom-control-flow-if-else-if-2 expects 0 1`] = `
+<div>
+  <div>
+    Hello World
+            
+  </div>
+  <!--if-->
+  <!--if-->
+</div>
+`;
+
+exports[`dom-control-flow-if-else-if-3 expects 2 1`] = `
+<div>
+  <!--if-->
+  <div>
+    Hello World 2
+        
+  </div>
+  <!--if-->
+</div>
+`;
+
+exports[`dom-control-flow-if-else-if-4 expects 3 1`] = `
+<div>
+  <!--if-->
+  <!--if-->
+  <div>
+    Hello World 3
+        
+  </div>
+</div>
+`;
+
+exports[`dom-control-flow-if-else-if-5 expects 2 1`] = `
+<div>
+  <!--if-->
+  <div>
+    Hello World 2
+        
+  </div>
+  <!--if-->
+  <!--if-->
+</div>
+`;
+
+exports[`dom-control-flow-if-else-if-6 expects 3 1`] = `
+<div>
+  <!--if-->
+  <!--if-->
+  <div>
+    Hello World 3
+        
+  </div>
+  <!--if-->
+</div>
+`;
+
+exports[`dom-control-flow-if-false expects none 1`] = `<!--if-->`;
+
+exports[`dom-control-flow-if-true 1`] = `
+<div>
+  Hello World
+        
+</div>
+`;
