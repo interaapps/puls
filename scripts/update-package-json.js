@@ -36,6 +36,15 @@ workspaces.forEach((pkg) => {
                 }
                 fs.writeFileSync(templatePkgJsonPath, JSON.stringify(templatePkgJson, null, 2) + "\n");
             }
+
+            for (const n of ['index.js', 'index.mjs']) {
+                if (fs.existsSync(path.join(templatesPath, 'dist', n))) {
+                    const content = fs.readFileSync(path.join(templatesPath, 'dist', n), 'utf-8')
+                    if (!content.includes('#!/usr/bin/env')) {
+                        fs.writeFileSync(path.join(templatesPath, 'dist', n), '#!/usr/bin/env node\n' + content)
+                    }
+                }
+            }
         }
 
 

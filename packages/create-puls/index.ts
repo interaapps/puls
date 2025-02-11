@@ -64,7 +64,7 @@ async function main() {
     ])
 
     const templateDir = path.resolve(
-        __dirname + (argv.dev ? '/packages/create-puls' : ''),
+        __dirname + (argv.dev ? '/packages/create-puls' : '/create-pulsjs'),
         '../..',
         language,
     )

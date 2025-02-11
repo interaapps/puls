@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-scss",
-  "version": "1.0.7-prealpha",
+  "version": "1.0.8-prealpha",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
