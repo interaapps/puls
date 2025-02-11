@@ -109,6 +109,7 @@
   },
   "exclude": [
     "**/tests/**/*",
-    "examples/**"
+    "examples/**",
+    "packages/create-puls/template-*/**",
   ]
 }
