@@ -16,6 +16,8 @@ export class PulsComponent extends HTMLElement {
 
     attributeListeners: { key: string, options: AttributeOptions }[] = []
 
+    mutationObserver: MutationObserver|null = null
+
     constructor(public options: PulsComponentOptions = {}) {
         super()
         this.options = options
@@ -59,15 +61,35 @@ export class PulsComponent extends HTMLElement {
             this.addStyle(styleFromFunc)
 
 
-        new MutationObserver(mutations => {
+        this.mutationObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
                 if (mutation.type === 'attributes') {
+                    if (mutation.attributeName && mutation.attributeName in this) {
+                        this.setAttribute(mutation.attributeName, this.getAttribute(mutation.attributeName))
+                    }
                     this.dispatchEvent(new CustomEvent(':attributechanged', {detail: {mutation}}))
                 }
             })
-        }).observe(this, {
-            attributes: true
         })
+
+        for (let attributeName of this.getAttributeNames()) {
+            if (attributeName in this) {
+                this.setAttribute(attributeName, this.getAttribute(attributeName))
+            } else {
+                if (attributeName.startsWith(':')) {
+                    const newAttributeName = attributeName.substring(1)
+                    const attrVal = this.getAttribute(attributeName)
+                    if (newAttributeName in this && attrVal) {
+                        this.setAttribute(newAttributeName, JSON.parse(attrVal))
+                    }
+                }
+            }
+        }
+        this.connectObserver()
+    }
+
+    connectObserver() {
+        this.mutationObserver?.observe(this, {attributes: true})
     }
 
     registerAttributeListener() {
@@ -134,6 +156,10 @@ export class PulsComponent extends HTMLElement {
         this.mainElement?.appendChild(styleEl)
     }
 
+    disconnectedCallback() {
+        this.mutationObserver?.disconnect()
+    }
+
     render(): Node[]|null|Promise<Node[]|null> {
         throw new Error('Not implemented')
     }
@@ -142,10 +168,33 @@ export class PulsComponent extends HTMLElement {
         return ''
     }
 
+    setAttribute(key: string, value: any) {
+        this.mutationObserver?.disconnect()
+        if (key in this) {
+            const v = (this as any)[key];
+
+            if (value instanceof Hook && !(v instanceof Hook)) {
+                value.addListener(() => {
+                    (this as any)[key] = value.value
+                })
+                ;(this as any)[key] = value.value
+            } else {
+                if (v instanceof Hook) {
+                    v.value = value
+                } else {
+                    ;(this as any)[key] = value
+                }
+            }
+        } else {
+            super.setAttribute(key, value)
+        }
+        this.connectObserver()
+    }
+
     /**
      * @type {typeof PulsComponent}
      */
-    static unshadowed = class JDOMUnshadowedComponent extends PulsComponent {
+    static unshadowed = class PulsUnshadowedComponent extends PulsComponent {
         constructor(options = {}) {
             super({ shadowed: false, ...options })
         }

@@ -18,7 +18,7 @@ export function registerComponent(
         const camelCaseStr = str.charAt(0).toLowerCase() + str.slice(1);
 
         let name = camelCaseStr.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-        name = name.includes('-') ? name : `jdom-${name}`
+        name = name.includes('-') ? name : `puls-${name}`
 
         const alreadyRegisted = window.customElements.get(name)
         if (alreadyRegisted) {
@@ -34,4 +34,15 @@ export function registerComponent(
     Object.entries(tag).forEach(([name, comp]) => {
         window.customElements.define(name, comp)
     })
+}
+
+
+export function CustomElement(name: string|undefined = undefined) {
+    return function(target: CustomElementConstructor) {
+        if (name === undefined) {
+            registerComponent([target])
+            return;
+        }
+        registerComponent(name, target);
+    }
 }

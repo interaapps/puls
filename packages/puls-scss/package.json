@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-scss",
-  "version": "1.0.4-prealpha",
+  "version": "1.0.5-prealpha",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -12,6 +12,18 @@
   "dependencies": {
     "sass": "^1.84.0"
   },
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
+  "files": [
+    "dist/",
+    "package.json"
+  ],
+  "type": "module",
+  "module": "dist/index.mjs",
   "exports": {
     ".": {
       "import": {
@@ -26,17 +38,5 @@
       },
       "default": "index.ts"
     }
-  },
-  "unpkg": "dist/index.browser.js",
-  "jsdelivr": "dist/index.browser.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/interaapps/puls.git"
-  },
-  "files": [
-    "dist/",
-    "package.json"
-  ],
-  "type": "module",
-  "module": "dist/index.mjs"
+  }
 }

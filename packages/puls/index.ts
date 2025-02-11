@@ -4,6 +4,7 @@ import {PulsHookedDOMAdapter} from "pulsjs-dom-adapter";
 export * from "pulsjs-state";
 export * from "pulsjs-adapter"
 export * from "./src/puls";
+export * from "./src/custom-elements";
 export * from "./src/PulsComponent";
 
 const puls = createPuls<Node[]>({

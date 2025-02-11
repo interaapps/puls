@@ -59,6 +59,9 @@ importers:
       pulsjs:
         specifier: workspace:*
         version: link:../../packages/puls
+      pulsjs-static-adapter:
+        specifier: workspace:*
+        version: link:../../packages/puls-static-adapter
     devDependencies:
       typescript:
         specifier: ~5.7.2
@@ -102,6 +105,12 @@ importers:
         specifier: workspace:*
         version: link:../puls-template
 
+  packages/puls-router:
+    dependencies:
+      pulsjs:
+        specifier: workspace:*
+        version: link:../puls
+
   packages/puls-scss:
     dependencies:
       sass:
@@ -109,6 +118,15 @@ importers:
         version: 1.84.0
 
   packages/puls-state: {}
+
+  packages/puls-static-adapter:
+    dependencies:
+      pulsjs-adapter:
+        specifier: workspace:*
+        version: link:../puls-adapter
+      pulsjs-state:
+        specifier: workspace:*
+        version: link:../puls-state
 
   packages/puls-template: {}
 

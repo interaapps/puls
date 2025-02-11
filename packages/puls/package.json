@@ -1,6 +1,6 @@
 {
   "name": "pulsjs",
-  "version": "1.0.4-prealpha",
+  "version": "1.0.5-prealpha",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,6 +14,18 @@
     "pulsjs-template": "workspace:*",
     "pulsjs-dom-adapter": "workspace:*"
   },
+  "files": [
+    "dist/",
+    "package.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "type": "module",
+  "module": "dist/index.mjs",
   "exports": {
     ".": {
       "import": {
@@ -28,17 +40,5 @@
       },
       "default": "index.ts"
     }
-  },
-  "files": [
-    "dist/",
-    "package.json"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/interaapps/puls.git"
-  },
-  "unpkg": "dist/index.browser.js",
-  "jsdelivr": "dist/index.browser.js",
-  "type": "module",
-  "module": "dist/index.mjs"
+  }
 }

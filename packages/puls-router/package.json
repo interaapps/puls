@@ -1,27 +1,21 @@
 {
-  "name": "pulsjs-adapter",
+  "name": "puls-router",
   "version": "1.0.5-prealpha",
+  "description": "",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "pulsjs": "workspace:*"
+  },
+  "keywords": [],
   "author": "Julian Gojani",
   "license": "MIT",
-  "description": "",
-  "dependencies": {
-    "pulsjs-template": "workspace:*"
-  },
   "files": [
     "dist/",
     "package.json"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/interaapps/puls.git"
-  },
-  "main": "dist/index.js",
-  "unpkg": "dist/index.global.js",
-  "jsdelivr": "dist/index.global.js",
-  "type": "module",
   "module": "dist/index.mjs",
   "exports": {
     ".": {
@@ -37,5 +31,11 @@
       },
       "default": "index.ts"
     }
+  },
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
   }
 }

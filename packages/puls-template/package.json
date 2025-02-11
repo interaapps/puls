@@ -1,12 +1,25 @@
 {
   "name": "pulsjs-template",
-  "version": "1.0.4-prealpha",
+  "version": "1.0.5-prealpha",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Julian Gojani",
   "license": "MIT",
   "description": "",
+  "files": [
+    "dist/",
+    "package.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
+  "main": "dist/index.js",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "type": "module",
+  "module": "dist/index.mjs",
   "exports": {
     ".": {
       "import": {
@@ -21,18 +34,5 @@
       },
       "default": "index.ts"
     }
-  },
-  "files": [
-    "dist/",
-    "package.json"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/interaapps/puls.git"
-  },
-  "main": "dist/index.js",
-  "unpkg": "dist/index.browser.js",
-  "jsdelivr": "dist/index.browser.js",
-  "type": "module",
-  "module": "dist/index.mjs"
+  }
 }

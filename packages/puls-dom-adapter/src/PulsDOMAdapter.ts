@@ -1,5 +1,5 @@
 import { ParserOutput, ParserTag, ParserText, ParserValue } from "pulsjs-template";
-import {PulsAdapter} from "pulsjs-adapter";
+import {currentLifecycleHooks, PulsAdapter, resetLifecycleHooks} from "pulsjs-adapter";
 
 export type ValueTransformer<T> = {
     type: string,
@@ -9,6 +9,9 @@ export type ValueTransformer<T> = {
 }
 
 export class PulsDOMAdapter extends PulsAdapter<Node[]>{
+    controlFlows: boolean[][] = []
+    currentControlFlow: number = 0
+
     documentOverride: Document|null = null
 
     inSVG = false
@@ -22,21 +25,72 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         'element': (part) => {
             const conf = part as ParserTag
             if (typeof conf.tag === 'function') {
+                resetLifecycleHooks()
+
+                let out: Node[]|undefined = []
                 if ('prototype' in conf.tag && conf.tag.prototype instanceof HTMLElement) {
-                    return this.createFromValue(new (conf.tag as CustomElementConstructor)())
+                    out = this.createFromValue(this.createElement(conf))
+                } else {
+                    out = this.createFromValue((conf.tag as (values: any) => any)({
+                        ...conf.attributes.reduce((acc, [key, value]) => ({
+                                ...acc,
+                                [key]: value
+                            }), {}),
+
+
+                        $slot: (conf.body.length > 0 ? (new (this.constructor as new (b: ParserOutput[]) => PulsDOMAdapter)(conf.body)).render() : undefined),
+                    }))
                 }
 
-                return this.createFromValue((conf.tag as (values: any) => any)({
-                    ...conf.attributes
-                }))
+                let lifeCycleComment: undefined|Comment= undefined
+                const lifeCycleHooks = currentLifecycleHooks
+
+                if (lifeCycleHooks.setAny) {
+                    lifeCycleComment = this.document.createComment('lifecycle')
+
+                    lifeCycleHooks.onMount.forEach(fn => fn())
+                    queueMicrotask(() => lifeCycleHooks.onMounted.forEach(fn => fn()));
+
+                    if (lifeCycleHooks.onUnmount.length > 0 || lifeCycleHooks.onUnmounted.length > 0) {
+                        const observer = new MutationObserver(mutations => {
+                            mutations.forEach(mutation => {
+                                mutation.addedNodes.forEach(node => {
+                                    if (node === lifeCycleComment) {
+                                        queueMicrotask(() => lifeCycleHooks.onMounted.forEach(fn => fn()));
+                                    }
+                                });
+
+                                mutation.removedNodes.forEach(node => {
+                                    if (node === lifeCycleComment) {
+                                        lifeCycleHooks.onUnmount.forEach(fn => fn())
+                                        queueMicrotask(() => lifeCycleHooks.onUnmounted.forEach(fn => fn()));
+                                        observer.disconnect()
+                                    }
+                                });
+                            });
+                        });
+
+                        observer.observe(this.document.body, {
+                            childList: true,
+                            subtree: true
+                        });
+                    }
+                }
+
+                return [...(out || [this.document.createComment('')]), ...(lifeCycleComment ? [lifeCycleComment] : [])]
             } else if (conf.tag.includes('-') && window?.customElements) {
                 const customElement = window.customElements.get(conf.tag)
                 if (customElement) {
-                    return this.createFromValue(new customElement())
+                    console.log(customElement)
+                    return this.createElement({
+                        ...conf,
+                        tag: customElement
+                    })
                 }
             }
 
-            return [this.createElement(part as ParserTag)]
+            const a = this.createElement(part as ParserTag)
+            return a === undefined ? [this.document.createComment('')] : [a]
         },
         'value': (part) => this.createFromValue((part as ParserValue).value)
     }
@@ -57,11 +111,13 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         {
             type: 'array',
             test: (value: any) => Array.isArray(value),
-            create: (value: any) => value.map((e: any) => this.createFromValue(e)).flat(),
+            create: (value: any) => value.map((e: any) => this.createFromValue(e.length === 0 ? [this.document.createComment('')] : e)).flat(),
             set: ((el, value: any) => {
                 // @ts-ignore
                 el = el.map(e => this.createFromValue(e)).filter(e => e !== undefined).flat()
                 value = value.map((e: any) => this.createFromValue(e)).flat()
+
+                if (value.length === 0) value.push(this.document.createComment(''))
 
                 value.forEach((e: ChildNode) => {
                     this.beforeElement(el[0] as HTMLElement, e)
@@ -69,29 +125,33 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 el.forEach(e => this.removeElement(e))
 
                 return value
-                /*el = el.map(e => this.createFromValue(e)).filter(e => e !== undefined)
-                value = value.map((e: any) => this.createFromValue(e))
-
-                const existingKeys = new Set(el.filter(e => e instanceof HTMLElement).map(e => e.getAttribute('key')));
-                const newElements = value.map((e: Node) => {
-                    const key = e instanceof HTMLElement ? e.getAttribute('key') || null : null;
-                    if (key && existingKeys.has(key)) {
-                        const existingElement = el.find(existing => existing instanceof HTMLElement ? existing.getAttribute('key') === key : false);
-                        existingElement?.replaceWith(e);
-                        return existingElement;
-                    }
-
-                    el[0].before(e);
-                    return e;
-                });
-                el.forEach(e => {
-                    if (!newElements.includes(e)) {
-                        e.remove();
-                    }
-                });
-                return newElements;*/
             })
-        } as ValueTransformer<ChildNode>
+        } as ValueTransformer<ChildNode>,
+        {
+            type: 'placeholder',
+            test: (value: any) => value === null || value === undefined,
+            create: (value: any) => {
+                return [this.document.createComment('placeholder')]
+            },
+            set: (el, value: any) => {}
+        } as ValueTransformer<ChildNode>,
+        {
+            type: 'promise',
+            test: (value: any) => typeof value === 'object' && value instanceof Promise,
+            create: (value: any) => {
+                const promisePlaceholder = this.document.createComment('promise')
+
+                value.then((v: any) => {
+                    const fromValue = this.createFromValue(v)
+                    if (fromValue?.[0]) {
+                        this.replaceElement(promisePlaceholder, fromValue[0] as ChildNode)
+                    }
+                })
+
+                return [promisePlaceholder]
+            },
+            set: (el, value: any) => {}
+        } as ValueTransformer<ChildNode>,
     ]
 
 
@@ -109,26 +169,41 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
 
     }
 
-    setAttribute(el: Element, key: string, value: any) {
-        if (key.startsWith('@')) {
-            const eventParts = key.substring(1).split('.')
-            const eventName = eventParts.shift()!
-
-            el.addEventListener(eventName, function (e) {
-                const target = e.target as HTMLElement
-                const path = e.composedPath()
-
-                for (const part of eventParts) {
-                    if (part === 'stop') {
-                        e.stopPropagation()
-                    } else if (part === 'prevent') {
-                        e.preventDefault()
-                    }
+    setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag): Node|undefined {
+        if (key === ':if' || key === ':if-else' || key === ':else') {
+            if (key === ':if') {
+                this.currentControlFlow = this.controlFlows.push([value]) - 1
+                if (!value) {
+                    return this.document.createComment('if')
                 }
+            }
+            if (key === ':if-else') {
+                let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
+                this.controlFlows[this.currentControlFlow].push(value)
 
-                return value(e)
-            })
-            return;
+                if (!(isElse && value)) {
+                    return this.document.createComment('if')
+                }
+            }
+            if (key === ':else') {
+                let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
+
+                if (!isElse) {
+                    return this.document.createComment('if')
+                }
+            }
+
+            parserTag.attributes = parserTag.attributes.filter(([k]) => k !== key)
+            return this.createElement(parserTag)
+        }
+
+        if (el === undefined) return;
+
+        if (key === ':ref') {
+            if (typeof value === 'function') {
+                value(el)
+                return;
+            }
         }
 
         if (key === 'style' && typeof value === 'object') {
@@ -143,24 +218,78 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             return
         }
 
+        if (key.startsWith('@')) {
+            const eventParts = key.substring(1).split('.')
+            const eventName = eventParts.shift()!
+
+            el.addEventListener(eventName, function (e) {
+                for (const part of eventParts) {
+                    if (part === 'stop') {
+                        e.stopPropagation()
+                    } else if (part === 'prevent') {
+                        e.preventDefault()
+                    }
+                }
+
+                return value(e)
+            })
+            return;
+        }
+
         el.setAttribute(key, value)
+
+        return
     }
 
-    createElement(value: ParserTag): Node {
-        let el: Element = this.document.createElement(value.tag as string)
+    createElement(value: ParserTag): Node|undefined {
+        let el: Node|undefined = undefined
+
+        const attributes: [string, any][] = []
+        const controlFlows: [string, any][] = []
+
+        for (const attr of value.attributes) {
+            if ([':if', ':else-if', ':else'].includes(attr[0])) {
+                controlFlows.push(attr)
+            } else {
+                attributes.push(attr)
+            }
+        }
+
+        for (const [key, val] of controlFlows) {
+            return this.setAttribute(undefined, key, val, value)
+        }
+
+        if (typeof value.tag === 'string') {
+            el = this.document.createElement(value.tag as string)
+        } else if ('prototype' in value.tag && value.tag.prototype instanceof HTMLElement) {
+            el = new (value.tag as CustomElementConstructor)()
+        }
 
         if (value.tag === 'svg' || this.inSVG) {
             el = this.document.createElementNS('http://www.w3.org/2000/svg', value.tag as string)
             this.inSVG = true
         }
 
-        for (const [key, val] of value.attributes) {
-            this.setAttribute(el, key, val)
+        if (el instanceof Element) {
+            for (const [key, val] of attributes) {
+                const overrideEl = this.setAttribute(el, key, val, value)
+                if (overrideEl) {
+                    el = overrideEl
+
+                    if (value.tag === 'svg') {
+                        this.inSVG = false
+                    }
+
+                    return el
+                }
+            }
         }
 
-        for (const bodyElement of value.body) {
-            this.addPart(bodyElement)
-                .forEach(e => this.appendChild(el, e))
+        if (el instanceof Element) {
+            for (const bodyElement of value.body) {
+                this.addPart(bodyElement)
+                    ?.forEach(e => this.appendChild(el, e))
+            }
         }
 
         if (value.tag === 'svg') {
@@ -178,7 +307,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
 
     addPart(part: ParserOutput): Node[] {
         return part.type in this.partTransformers
-            ? this.partTransformers[part.type](part as any)
+            ? this.partTransformers[part.type].bind(this)(part as any)
             : null;
     }
 

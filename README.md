@@ -16,6 +16,14 @@ appendTo(document.body, html`
 `)
 ```
 
+## Feature overview
+- Puls uses the DOM directly (no virtual DOM)
+- Reactive state
+- Computed values
+- Components
+- Control flow
+- Event handling
+- Bindings
 
 ## State
 ```js
@@ -39,14 +47,16 @@ appendTo(document.body, html`
 ```js
 import { html } from 'pulsjs'
 
-function ExampleComponent(props) {
+function ExampleComponent({
+    example
+}) {
     return html`
-        <p>Example component</p>
+        <p>Example component ${example}</p>
     `
 }
 
 html`
-    <${ExampleComponent} />
+    <${ExampleComponent} example="hello world" />
 `
 ```
 ### Class components
@@ -54,21 +64,75 @@ html`
 import { html } from 'pulsjs'
 
 class ExampleComponent extends PulsComponent {
+    example = state('val')
+    
     setup() {
         console.log('Setup')
     }
     
     render() {
         return html`
-            <p>Example component</p>
+            <p>Example component ${this.example}</p>
         `
     }
 }
+registerComponent('exmaple-component', ExampleComponent)
 
+// Typescript
+@CustomElement('example-component')
+export class ExampleComponent extends PulsComponent {}
+
+const a = state('test')
 html`
-    <${ExampleComponent} />
+    <${ExampleComponent} example=${a} />
 `
 ```
+
+### Using Web-Components outside of Puls
+```js
+export class ExampleComponent extends PulsComponent {
+    test = state('hello')
+    exampleObject = state({})
+    // ...
+}
+registerComponent('example-component', ExampleComponent)
+
+document.body.innerHTML = `
+    <example-component test="hello"></example-component>
+    
+    <example-component :exampleObject="{\"key\": 4}"></example-component>
+`
+```
+
+# Control flow
+```js
+import { html, appendTo, state, computed } from 'pulsjs'
+
+const counter = state(1)
+
+html`
+    <!-- js ternary operator -->
+    ${computed(() => 
+        counter.value === 1 ? html`<div>Value is 1</div>` :
+        counter.value === 2 ? html`<div>Value is 2</div>` :
+        html`Value is something else`
+    )}
+    
+    <!-- attributes -->
+    <div :if=${() => counter.value === 1}>
+        Value is 1
+    </div>
+    <div :else-if=${() => counter.value === 1}>
+        Value is 2
+    </div>
+    <div :else>
+        Value is something else
+    </div>
+    
+    <button @click=${() => counter.value++}>Increment ${counter}</button>
+`
+```
+
 
 
 ## Extensions
@@ -77,7 +141,7 @@ html`
 npm install pulsjs-scss
 ```
 ```js
-import { PulsComponent, html } from 'pulsjs'
+import { PulsComponent, CustomElement, html } from 'pulsjs'
 import { scss } from 'pulsjs-scss'
 
 export class ExampleComponent extends PulsComponent {
@@ -96,8 +160,6 @@ export class ExampleComponent extends PulsComponent {
     }
 }
 ```
-
-
 
 ## Contributing
 Use pnpm

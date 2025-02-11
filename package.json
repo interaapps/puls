@@ -26,6 +26,6 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "rollup -c && node scripts/update-package-json.js"
+    "build": "node --max-old-space-size=8192 node_modules/rollup/dist/bin/rollup -c && node scripts/update-package-json.js"
   }
 }

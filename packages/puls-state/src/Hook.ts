@@ -1,3 +1,5 @@
+import {deepWatch} from "./object-watch";
+
 export type HookListener<T> = (val: T, oldVal: T) => void
 
 export type HookOptions = { deep?: boolean }
@@ -18,23 +20,8 @@ export class Hook<T> {
     setValue(val: T, dispatch = true) {
         if (this.options.deep) {
             if (val && typeof val === 'object') {
-                val = new Proxy(val, {
-                    set: (target: object, p: string | symbol, newValue: any, receiver: any): boolean => {
-                        this.dispatchListener(val)
-                        return true
-                    },
-                    get: (target: object, p: string | symbol, receiver: any): any => {
-                        if (Array.isArray(target)) {
-                            if (p === 'push' || p === 'pop' || p === 'shift' || p === 'unshift' || p === 'splice') {
-                                return (...v: any[]) => {
-                                    const m = Reflect.get(target, p, receiver).call(target, ...v)
-                                    this.dispatchListener(val)
-                                    return m;
-                                };
-                            }
-                        }
-                        return Reflect.get(target, p, receiver)
-                    }
+                val = deepWatch(val, (v)=>{
+                    this.dispatchListener(v)
                 }) as T
             }
         }
