@@ -2,13 +2,17 @@ import {deepWatch} from "./object-watch";
 
 export type HookListener<T> = (val: T, oldVal: T) => void
 
-export type HookOptions = { deep?: boolean }
+export type HookOptions = {
+    deep?: boolean
+}
 
 export class Hook<T> {
     listeners: HookListener<T>[] = []
 
     #destroyed = false
     #alreadyProxied = false
+
+    disableDispatch = false
 
     static TRACKING: Hook<any>[] = []
     static IS_TRACKING = false
@@ -20,7 +24,7 @@ export class Hook<T> {
     setValue(val: T, dispatch = true) {
         if (this.options.deep) {
             if (val && typeof val === 'object') {
-                val = deepWatch(val, (v)=>{
+                val = deepWatch(this, val, (v)=>{
                     this.dispatchListener(v)
                 }) as T
             }
@@ -51,6 +55,8 @@ export class Hook<T> {
     }
 
     dispatchListener(oldVal: T) {
+        if (this.disableDispatch) return;
+
         for (let listener of this.listeners) {
             try {
                 listener.call(this, this._value, oldVal)

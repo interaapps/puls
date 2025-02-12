@@ -93,3 +93,51 @@ test('dom-adapter-function-components', () => {
     const [div] = d.render()
     expect(div).toMatchSnapshot()
 })
+
+test('dom-adapter-event-handler', () => {
+    let clicked = false;
+    const d = new PulsDOMAdapter(html`
+        <button @click=${() => clicked = true}>Click Me</button>
+    `.parse())
+
+    const [button] = d.render()
+    button.dispatchEvent(new Event('click'))
+
+    expect(clicked).toBe(true)
+    expect(button).toMatchSnapshot()
+})
+
+test('dom-adapter-promise', async () => {
+    const promiseValue = new Promise(resolve => setTimeout(() => resolve('Async Loaded!'), 100))
+    const d = new PulsDOMAdapter(html`
+        <div>
+            <p>${promiseValue}</p>
+        </div>
+    `.parse())
+
+    const [div] = d.render()
+    expect(div).toMatchSnapshot()
+
+    await promiseValue
+    expect(div).toMatchSnapshot()
+})
+
+test('dom-adapter-slots', () => {
+    const TestComponent = (props: { $slot?: any }) => new PulsDOMAdapter(html`
+        <div>
+            <h2>Title</h2>
+            ${props.$slot}
+        </div>
+    `.parse()).render()
+
+    const d = new PulsDOMAdapter(html`
+        <div>
+            <${TestComponent}>
+                <p>Inside the component</p>
+            </${TestComponent}>
+        </div>
+    `.parse())
+
+    const [div] = d.render()
+    expect(div).toMatchSnapshot()
+})

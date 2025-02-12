@@ -213,4 +213,31 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         listener()
         return els
     }
+
+
+
+    setElementStyle(el: Element, key: string, value: any) {
+        if (value instanceof Hook) {
+            this.addListener(el, () => {
+                super.setElementClass(el, key, value.value)
+            })
+
+            super.setElementStyle(el, key, value.value)
+        }
+
+        super.setElementStyle(el, key, value)
+    }
+
+    setElementClass(el: Element, key: string, condition: any) {
+        if (condition instanceof Hook) {
+            this.addListener(el, condition.addListener(() => {
+                super.setElementClass(el, key, condition.value)
+            }))
+
+            return super.setElementClass(el, key, condition.value)
+        }
+
+        super.setElementClass(el, key, condition)
+    }
+
 }

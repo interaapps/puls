@@ -91,7 +91,6 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             } else if (conf.tag.includes('-') && window?.customElements) {
                 const customElement = window.customElements.get(conf.tag)
                 if (customElement) {
-                    console.log(customElement)
                     return this.createElement({
                         ...conf,
                         tag: customElement
@@ -176,7 +175,6 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         } else {
             el.classList.remove(key)
         }
-
     }
 
     setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag): Node|undefined {

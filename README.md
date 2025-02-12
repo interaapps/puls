@@ -41,13 +41,17 @@ npm create pulsjs my-app-name
 - Event handling
 - Bindings
 
-## State
+## Hooks (state)
 ```js
-import { state, computed, html, appendTo } from 'pulsjs'
+import { state, computed, watch, html, appendTo } from 'pulsjs'
 
 const name = state('John')
 
 const computedValue = computed(() => `I'm happy that you are named ${name.value}`)
+
+watch([name], () => {
+    console.log('Name changed')
+})
 
 appendTo(document.body, html`
     <h1>Hello ${name}!</h1>
@@ -56,6 +60,21 @@ appendTo(document.body, html`
     
     <input :bind=${name}>
 `)
+```
+
+### State Helper
+```js
+import { track, state } from 'pulsjs'
+
+const hello = state({
+    hello: 'World',
+    world: 'example'
+}, { deep: true })
+
+watch([track(() => hello.value)], () => {
+    console.log('Hello changed')
+})
+
 ```
 
 ## Components
@@ -175,6 +194,57 @@ export class ExampleComponent extends PulsComponent {
         `
     }
 }
+```
+
+### Router
+```bash
+npm install pulsjs-router
+```
+```js
+import { PulsComponent, CustomElement, html } from 'pulsjs'
+import { Router } from 'pulsjs-router'
+
+
+const router = new Router([
+    {
+        path: '/',
+        name: 'home',
+        view: () => html`
+            <div>
+                <h1>Router Works!</h1>
+            </div>
+        `
+    },
+    {
+        path: '/test',
+        name: 'test',
+        view: () => html`
+            <div>
+                <h1>Router page 2!</h1>
+            </div>
+        `
+    },
+    {
+        path: '/*',
+        name: '404',
+        view: () => html`
+            <div>
+                <h1>404</h1>
+            </div>
+        `
+    }
+    
+    // Also supports nested routes with children and layouting
+])
+
+appendTo(document.body, html`
+    <div>
+        ${router.link}
+    </div>
+    <${router.link} to=${{name: 'home'}}>Home</${router.link}>
+    <${router.link} to="/test">Test Page</${router.link}>
+`)
+router.init()
 ```
 
 ## Contributing

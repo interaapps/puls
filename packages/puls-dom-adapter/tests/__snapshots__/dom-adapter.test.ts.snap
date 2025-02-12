@@ -40,6 +40,12 @@ exports[`dom-adapter-complex-html 1`] = `
 </div>
 `;
 
+exports[`dom-adapter-event-handler 1`] = `
+<button>
+  Click Me
+</button>
+`;
+
 exports[`dom-adapter-full 1`] = `
 <div>
   <h1>
@@ -71,6 +77,37 @@ exports[`dom-adapter-nested 1`] = `
   </h1>
   
         
+</div>
+`;
+
+exports[`dom-adapter-promise 1`] = `
+<div>
+  <p>
+    <!--promise-->
+  </p>
+</div>
+`;
+
+exports[`dom-adapter-promise 2`] = `
+<div>
+  <p>
+    Async Loaded!
+  </p>
+</div>
+`;
+
+exports[`dom-adapter-slots 1`] = `
+<div>
+  <div>
+    <h2>
+      Title
+    </h2>
+    <p>
+      Inside the component
+    </p>
+    
+        
+  </div>
 </div>
 `;
 

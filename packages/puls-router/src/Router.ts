@@ -1,14 +1,27 @@
 import {state, html} from "pulsjs";
-import {ParserOutput} from "pulsjs-template";
+import {computed} from "pulsjs-state";
+
+export type ViewCallback = Node[]|undefined|Promise<Node[]|undefined>;
 
 export type Route = {
-    name: string;
+    name?: string;
     path: string;
-    view: () => Node[]|undefined|Promise<Node[]|undefined>;
-}
+    subRouter?: Router;
+} & ({
+    view: () => ViewCallback;
+} | (
+    {
+        children?: Route[];
+    }
+    & ({
+        view: (template: () => Node[]) => ViewCallback;
+    } | {})
+) | {
+    redirect: string|SearchRoute;
+})
 
 export type CurrentRoute = {
-    name: string;
+    name?: string;
     path: string;
     query: Record<string, string>;
     params: Record<string, string>;
@@ -27,28 +40,68 @@ export class Router {
     currentRoute = state<CurrentRoute|null>(null)
     view = state<Node[]|null>(null)
 
-    routes: Route[] = []
+    private readonly routes: Route[] = []
 
     latestKnownPath = ''
 
     isLoading = state(false)
+    private popstateEvent?: () => void;
 
+    addRoutes(routes: Route[], startingUrl = '') {
+        for (let route of routes) {
+            if ('children' in route) {
+                if ('view' in route) {
+                    const r = new Router(route.children, this.basePath + startingUrl + route.path)
 
-    link: (props: { to: string|SearchRoute, $slot: Node[] }) => Node[] = () => []
-    constructor(routes: Route[] = []) {
-        this.routes = routes
+                    for (const rt of r.routes) {
+                        this.routes.push({
+                            ...rt,
+                            view: () => route.view(r.view as any),
+                            subRouter: r
+                        })
+                    }
+                    continue;
+                }
+                this.addRoutes(route.children!, startingUrl + route.path)
+                continue;
+            }
 
-        this.link = ({ to, $slot }) => {
-            return html`<a href=${to} @click.prevent=${() => this.go(to)}>${$slot}</a>`
+            const path = this.basePath + startingUrl + route.path
+
+            this.routes.push({...route, path})
         }
     }
 
-    getPath(to: string|SearchRoute) {
-        if (typeof to === 'string')
-            return to
+    link: (props: { to: string|SearchRoute, $slot: Node[], class: [] }) => Node[] = () => []
 
-        const route = to as CurrentRoute
-        let path = route.path
+    constructor(routes: Route[] = [], private basePath = '') {
+        this.addRoutes(routes)
+
+        this.link = ({ to, $slot, class: classList }) => {
+            const p = this.getPath(to, true)
+            return html`<a class=${{
+                'router-link-active': computed(() => this.currentRoute.value?.route.path && this.currentRoute.value?.route.path?.startsWith(p), [this.currentRoute]),
+                'router-link-active-exact': computed(() => this.currentRoute.value?.route.path === p, [this.currentRoute]),
+                ...(Array.isArray(classList) ? classList.reduce((prev, v) => ({...prev, [v]: true}), {}) :  classList)
+            }} href=${this.getPath(to)} @click.prevent=${() => this.go(to)}>${$slot}</a>`
+        }
+    }
+
+    getPath(to: string|SearchRoute, ignoreAdditions = false) {
+        if (typeof to === 'string') {
+            if (ignoreAdditions) {
+                to = to.split('?', 1)[0].split('#', 1)[0]
+            }
+            return to
+        }
+
+        const route = to as SearchRoute
+        let path = route.name && this.routes.find(r => r.name === route.name)?.path
+        if (path === undefined) {
+            if (route.name) console.warn('Route not found', route)
+            path = ''
+        }
+        if (ignoreAdditions) return path;
 
         if (to.params) {
             for (const [key, value] of Object.entries(to.params)) {
@@ -61,7 +114,7 @@ export class Router {
                 path += to.query.startsWith('?') ? to.query : `${to.query}`
             } else {
                 path += '?' + Object.keys(to.query)
-                    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent((to.params as any)[key])}`)
+                    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent((to.query as any)[key])}`)
                     .join('&')
             }
         }
@@ -79,21 +132,25 @@ export class Router {
             [to] = to.split('#', 1);
         }
         const path = this.getPath(to)
-        window.history.pushState(path, path, path)
+
+        window.history.pushState({}, '', new URL(path, window.location.href))
+
         this.latestKnownPath = window.location.pathname
 
         await this.run(reloadIfChanged)
+        await this.currentRoute.value?.route?.subRouter?.go(to, reloadIfChanged)
     }
 
-    async run(reloadIfChanged = true) {
+    private async run(reloadIfChanged = true) {
         const currentPath = window.location.pathname
+
         for (const route of this.routes) {
-            const {name, path, view} = route
+            const {name, path} = route
 
             const splitPath = path.split('/')
             const splitCurrentPath = currentPath.split('/')
 
-            if (splitPath.length !== splitCurrentPath.length)
+            if (splitPath.length !== splitCurrentPath.length && !path.includes('*'))
                 continue
 
             let isCorrect = true
@@ -110,10 +167,34 @@ export class Router {
                     continue;
 
                 if (item.length > 0 && item[0] === ':') {
-                    (params as any)[item.substring(1)] = currentPathItem
+                    let paramName = item.substring(1)
+
+                    if (paramName.includes('(')) {
+                        const name = paramName.substring(0, paramName.indexOf('('))
+                        const regex = paramName.substring(paramName.indexOf('(') + 1, paramName.length - 1)
+
+                        paramName = name
+                        const reg = new RegExp(`^(${regex})$`)
+
+                        if (!reg.test(currentPathItem)) {
+                            isCorrect = false
+                            continue
+                        }
+                    }
+                    if (paramName.includes('*')) {
+                        paramName = paramName.substring(0, paramName.length - 1)
+                        ;(params as any)[paramName] = currentPathItem
+                        isCorrect = true
+                        break
+                    }
+                    ;(params as any)[paramName] = currentPathItem
                     continue
                 }
 
+                if (item === '*') {
+                    isCorrect = true
+                    break
+                }
                 isCorrect = false
             }
 
@@ -133,22 +214,42 @@ export class Router {
                 if (!reloadIfChanged && latestRoute === route)
                     break;
 
+
                 this.isLoading.value = true
+                if (latestRoute?.subRouter && latestRoute?.subRouter !== route.subRouter) {
+                    await latestRoute.subRouter.destroy()
+                }
 
-                this.view.value = html`${await view()}`
+                if ('redirect' in route) {
+                    this.go(route.redirect)
+                } else if ('view' in route) {
+                    this.view.value = html`${await (route.view as (() => Node[] | Promise<Node[]>))()}`
+                }
 
+                if (route.subRouter && latestRoute?.subRouter !== route.subRouter) {
+                    await route.subRouter.init()
+                }
                 this.isLoading.value = false
+
                 break
             }
         }
     }
 
     async init() {
-        window.addEventListener('popstate', () => {
+        this.popstateEvent = () => {
             if (window.location.pathname !== this.latestKnownPath) {
                 this.run()
             }
-        })
+        }
+        window.addEventListener('popstate', this.popstateEvent)
         await this.run()
+    }
+
+    async destroy() {
+        if (this.popstateEvent) {
+            window.removeEventListener('popstate', this.popstateEvent)
+        }
+        this.view.value = null
     }
 }
