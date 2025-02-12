@@ -171,10 +171,6 @@ html`
 
 
 ## Extensions
-### SCSS
-```bash
-npm install pulsjs-scss
-```
 
 ### Puls Component Files (pulsjs-compiler)
 Example `ExampleComponent.puls`
@@ -186,6 +182,12 @@ const name = state('John Doe');
 
 <h1>${name}</h1>
 <input :bind=${name} />
+```
+[More Information](https://github.com/interaapps/puls/blob/main/packages/puls-compiler/README.md)
+
+### SCSS
+```bash
+npm install pulsjs-scss
 ```
 
 ```js
