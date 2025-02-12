@@ -175,6 +175,19 @@ html`
 ```bash
 npm install pulsjs-scss
 ```
+
+### Puls Component Files (pulsjs-compiler)
+Example `ExampleComponent.puls`
+```sveltehtml
+<script>
+import { state } from 'pulsjs'
+const name = state('John Doe');
+</script>
+
+<h1>${name}</h1>
+<input :bind=${name} />
+```
+
 ```js
 import { PulsComponent, CustomElement, html } from 'pulsjs'
 import { scss } from 'pulsjs-scss'

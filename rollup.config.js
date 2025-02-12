@@ -63,6 +63,8 @@ function topologicalSort(graph) {
 const dependencyGraph = buildDependencyGraph();
 const sortedWorkspaces = topologicalSort(dependencyGraph).filter((pkg) => workspaces.includes(pkg));
 
+const prod = true
+
 console.log(sortedWorkspaces)
 
 const configs = [
@@ -139,28 +141,9 @@ const configs = [
         ],
         external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Keep external dependencies as ESM
     },
-    {
-        input: path.join(packagesDir, pkg, "index.ts"),
-        output: {
-            file: path.join(packagesDir, pkg, distDir, "index.d.ts"),
-            format: "es"
-        },
-        plugins: [dts()],
-        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
-    },
-    {
-        input: path.join(packagesDir, pkg, "index.ts"),
-        output: {
-            file: path.join(packagesDir, pkg, distDir, "index.d.mts"),
-            format: "es"
-        },
-        plugins: [dts()],
-        external: (id) => !id.startsWith(".") && !path.isAbsolute(id), // Exclude external dependencies
-    },
 ])),
 
-    ...sortedWorkspaces.map((pkg) => ([
-
+    ...sortedWorkspaces.filter(() => prod).filter(pkg => !['puls-compiler', 'create-puls'].includes(pkg)).map((pkg) => ([
         // Browser export
         {
             input: path.join(packagesDir, pkg, "index.ts"),

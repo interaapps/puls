@@ -109,6 +109,8 @@ importers:
         specifier: workspace:*
         version: link:../puls-template
 
+  packages/puls-compiler: {}
+
   packages/puls-css: {}
 
   packages/puls-dom-adapter:

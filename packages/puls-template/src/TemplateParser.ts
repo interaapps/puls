@@ -4,7 +4,7 @@ import {TemplateParserBase} from "./TemplateParserBase";
 export class TemplateParser extends TemplateParserBase {
     autoCloseTags = ['hr', 'br', 'input', 'img', 'meta', 'link', 'wbr', 'source', 'keygen', 'spacer', 'isindex', 'track', 'param', 'embed', 'base', 'area', 'col', '!doctype']
 
-    readTag(): ParserTag {
+    readTag(): ParserTag|null {
         let tag: ParserTag = { type: 'element', tag: '', attributes: [], body: [], from: this.index, to: 0 }
         let opened = false
         let tagNameOpened = true
@@ -60,6 +60,11 @@ export class TemplateParser extends TemplateParserBase {
         }
 
         tag.to = this.index
+
+        if (this.filterElements && !this.filterElements(tag)) {
+            return null
+        }
+
         return tag
     }
 
@@ -193,6 +198,14 @@ export class TemplateParser extends TemplateParserBase {
                         let doNotAdd = false
 
                         if (i++ === 0) {
+
+                            // attribute=${...} with inner spacing and quotes
+                            if (this.nextIs('${')) {
+                                this.next()
+
+                                val += value + this.readUntilEndingBrace()
+                                doNotAdd = true
+                            }
                             if (value === '"' || value === "'")
                                 opener = value
                             else

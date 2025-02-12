@@ -85,7 +85,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 }
 
                 return [
-                    ...(out || [this.document.createComment('')]),
+                    ...(out || [this.document.createComment('placeholder')]),
                     ...(lifeCycleComment ? [lifeCycleComment] : [])
                 ]
             } else if (conf.tag.includes('-') && window?.customElements) {
@@ -108,25 +108,28 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         {
             type: 'text',
             test: (value: any) => typeof value === 'string' || typeof value === 'number',
-            create: (value: any) => [this.document.createTextNode(value)],
-            set: (el, value: any) => el.forEach(e => e.textContent = value)
-        } as ValueTransformer<Text>,
+            // Setting to ' ' because empty text nodes are removed by the browser (???)
+            create: (value: any) => [this.document.createTextNode(value === '' ? ' ' : value)],
+            set: (el, value: any) => el.forEach(e => {
+                e.textContent = value === '' ? ' ' : value
+            })
+        } as ValueTransformer<Text|Comment>,
         {
             type: 'element',
-            test: (value: any) => value instanceof HTMLElement,
+            test: (value: any) => value instanceof Node,
             create: (value: any) => [value],
             set: (el, value: any) => el.forEach(e => this.replaceElement(e, value))
         } as ValueTransformer<ChildNode>,
         {
             type: 'array',
             test: (value: any) => Array.isArray(value),
-            create: (value: any) => value.map((e: any) => this.createFromValue(e.length === 0 ? [this.document.createComment('')] : e)).flat(),
+            create: (value: any) => value.map((e: any) => this.createFromValue(e.length === 0 ? [this.document.createComment('array')] : e)).flat(),
             set: ((el, value: any) => {
                 // @ts-ignore
                 el = el.map(e => this.createFromValue(e)).filter(e => e !== undefined).flat()
                 value = value.map((e: any) => this.createFromValue(e)).flat()
 
-                if (value.length === 0) value.push(this.document.createComment(''))
+                if (value.length === 0) value.push(this.document.createComment('array'))
 
                 value.forEach((e: ChildNode) => {
                     this.beforeElement(el[0] as HTMLElement, e)

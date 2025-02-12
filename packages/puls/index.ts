@@ -7,7 +7,7 @@ export * from "./src/puls";
 export * from "./src/custom-elements";
 export * from "./src/PulsComponent";
 
-const puls = createPuls<Node[]>({
+export const pulsInstance = createPuls<Node[]>({
     adapter: typeof window === 'undefined' ? null : PulsHookedDOMAdapter
 })
 
@@ -16,4 +16,4 @@ export function appendTo(element: Node, content: Node[]) {
 }
 
 // @language=html
-export const html = puls.html
+export const html = pulsInstance.html

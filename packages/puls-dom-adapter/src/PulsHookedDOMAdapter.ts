@@ -166,6 +166,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             const type = this.valueTransformers.find(transformer => transformer.test(hook.value))?.type
 
             let updateListeners = false
+
             if (type !== lastType) {
                 let newElements = this.valueTransformers.find(transformer => transformer.type === type)?.create(hook.value)!
 
