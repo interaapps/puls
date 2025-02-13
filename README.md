@@ -174,7 +174,7 @@ html`
 
 ### Puls Component Files (pulsjs-compiler)
 Example `ExampleComponent.puls`
-```sveltehtml
+```svelte
 <script>
 import { state } from 'pulsjs'
 const name = state('John Doe');
