@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-compiler",
-  "version": "1.0.8-prealpha",
+  "version": "1.0.9-prealpha",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
