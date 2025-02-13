@@ -1,0 +1,92 @@
+{
+  "name": "pulsjs-jsx",
+  "version": "1.0.10-prealpha",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Julian Gojani",
+  "license": "MIT",
+  "exportsMerge": {
+    "./jsx-runtime": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "node": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "default": "index.ts"
+    },
+    "./jsx-dev-runtime": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "node": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "default": "index.ts"
+    }
+  },
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interaapps/puls.git"
+  },
+  "files": [
+    "dist/",
+    "package.json"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "node": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "default": "index.ts"
+    },
+    "./jsx-runtime": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "node": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "default": "index.ts"
+    },
+    "./jsx-dev-runtime": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "node": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "default": "index.ts"
+    }
+  },
+  "module": "dist/index.mjs"
+}

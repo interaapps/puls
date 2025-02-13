@@ -12,6 +12,6 @@
     "vite": "^6.1.0"
   },
   "dependencies": {
-    "pulsjs": "1.0.9-prealpha"
+    "pulsjs": "1.0.10-prealpha"
   }
 }

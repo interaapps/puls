@@ -20,7 +20,7 @@ npm install pulsjs
 ### Create with Vite
 Create a typescript or javascript project with PulsJS and Vite 
 ```bash
-npm create pulsjs my-app-name
+npm create pulsjs@latest my-app-name
 ```
 
 ### ESM import in browser
@@ -210,6 +210,21 @@ export class ExampleComponent extends PulsComponent {
     }
 }
 ```
+
+### JSX
+```jsx
+export function Test() {
+    const name = state('John')
+    return (
+        <div>
+            {name}
+            <input p-bind={name} />
+            <button on:click={() => name.value = 'test'}>Click me</button>
+        </div>
+    )
+}
+```
+
 
 ### Router
 ```bash

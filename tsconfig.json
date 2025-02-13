@@ -111,5 +111,7 @@
     "**/tests/**/*",
     "examples/**",
     "packages/create-puls/template-*/**",
+    "**/dist/**/*.d.ts",
+    "**/dist/**/*.d.mts",
   ]
 }

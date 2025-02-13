@@ -1,6 +1,6 @@
 {
   "name": "puls-router",
-  "version": "1.0.9-prealpha",
+  "version": "1.0.10-prealpha",
   "description": "",
   "main": "dist/index.js",
   "scripts": {

@@ -109,7 +109,11 @@ importers:
         specifier: workspace:*
         version: link:../puls-template
 
-  packages/puls-compiler: {}
+  packages/puls-compiler:
+    dependencies:
+      pulsjs-template:
+        specifier: workspace:*
+        version: link:../puls-template
 
   packages/puls-css: {}
 
@@ -124,6 +128,8 @@ importers:
       pulsjs-template:
         specifier: workspace:*
         version: link:../puls-template
+
+  packages/puls-jsx: {}
 
   packages/puls-router:
     dependencies:

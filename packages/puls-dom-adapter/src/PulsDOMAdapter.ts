@@ -45,6 +45,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                                 [key]: value
                             }), {}),
 
+                        ...(conf.attributes.find(([k]) => k === ':props')?.[1] || {}),
 
                         $slot: (conf.body.length > 0 ? (new (this.constructor as new (b: ParserOutput[]) => PulsDOMAdapter)(conf.body)).render() : undefined),
                     }))

@@ -93,6 +93,14 @@ workspaces.forEach((pkg) => {
                 pkgJson.files.push('template-js/')
             }
         }
+
+        if (pkgJson.exportsMerge) {
+            pkgJson.exports = {
+                ...pkgJson.exports,
+                ...pkgJson.exportsMerge
+            }
+        }
+
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n");
         console.log(`✅ Updated ${pkgJsonPath}`);
     }

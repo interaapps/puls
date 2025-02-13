@@ -105,13 +105,23 @@ export class TemplateParser extends TemplateParserBase {
     readAttributes(): ParserAttribute[] {
         const attributes: ParserAttribute[] = []
         let inAttribute = false
-
+        let isNotSpread = false
         while (this.hasNext()) {
             this.skipEmpty()
             const {type, value} = this.get()
 
             if (value === '>' || value === '/') {
                 break;
+            } else if (type === 'value' && !isNotSpread) {
+                const ind = this.index
+                this.skipEmpty()
+                if (this.nextIs('=')) {
+                    isNotSpread = true
+                    this.index = ind
+                    continue;
+                } else {
+                    attributes.push(...Object.entries(value))
+                }
             } else {
                 const {name, value: attrValue} = this.readAttribute()
                 attributes.push([name, attrValue])
@@ -122,6 +132,7 @@ export class TemplateParser extends TemplateParserBase {
             }
 
             this.next()
+            isNotSpread = false
         }
         return attributes
     }
