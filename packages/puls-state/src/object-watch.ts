@@ -18,7 +18,7 @@ export const deepWatchTracker = {
         deepWatchTracker.tracked = []
     },
 
-    callbacks: [] as [Hook<any>, string[], () => void][],
+    callbacks: [] as [Hook<any>, string[], (val: any) => void][],
 }
 
 
@@ -29,19 +29,19 @@ export function deepWatch<T extends object>(hook: Hook<any>, obj: T, callback: (
             const oldValue = target[property as keyof T];
             const newValue = value;
 
-            const deepWatchCallback = deepWatchTracker
-                .callbacks.find(([h, k]) => h === hook && (
+            const bol = Reflect.set(target, property, value, receiver);
+
+            deepWatchTracker
+                .callbacks
+                .filter(([h, k]) => h === hook && (
                     [...keys, property].join('.').startsWith(k.join('.'))
                 ))
-            if (deepWatchCallback) {
-                deepWatchCallback[2]()
-            }
+                .forEach(([_, __, c]) => c(value))
 
             if (oldValue !== newValue) {
                 callback(newValue, oldValue);
             }
-
-            return Reflect.set(target, property, value, receiver);
+            return bol
         },
         get(target, property, receiver) {
             const value = Reflect.get(target, property, receiver);

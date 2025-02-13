@@ -1,5 +1,5 @@
 import {PulsDOMAdapter} from "./PulsDOMAdapter";
-import {computed, Hook} from "pulsjs-state";
+import {computed, Hook, isHook, track} from "pulsjs-state";
 import {ParserTag} from "pulsjs-template";
 
 // Adds support for hooks in the PulsDOMAdapter
@@ -21,18 +21,27 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         if (el && key.startsWith(':bind')) {
             const field = key.split(':')[2] || 'value'
 
+            if (typeof value === 'function')
+                value = track(value)
+
+            if (!isHook(value)) throw new Error(`Expected a hook on :bind. Got ${typeof value}`)
+
             const hook = value as Hook<any>
 
-            hook.addListener(() => {
-                (el as any)[field] = hook.value
-            })
+            let removeListener: any;
+            const setListener = () => {
+                removeListener = hook.addListener(() => {
+                    (el as any)[field] = hook.value
+                })
+            }
+            setListener()
 
             el.addEventListener(field === 'value' ? 'input' : `input:${field}`, () => {
-                hook.setValue((el as any)[field])
+                removeListener()
+                hook.setValue((el as any)[field]);
+                setListener()
             })
             ;(el as any)[field] = hook.value
-
-
             return
         }
 
@@ -92,14 +101,14 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
                 for (let c of this.controlFlows[currentControlFlowId]) {
                     if (c) return false;
                 }
-                return value instanceof Hook ? value.value : value
+                return isHook(value) ? value.value : value
             }
 
             const ind = this.controlFlows[currentControlFlowId].push(cond()) - 1
 
-            this.controlFlowHooks[this.currentControlFlow][ind] = value instanceof Hook ? value : null
+            this.controlFlowHooks[this.currentControlFlow][ind] = isHook(value) ? value : null
 
-            if (value && value instanceof Hook) {
+            if (value && isHook(value)) {
                 for (const hk of this.controlFlowHooks[this.currentControlFlow]) {
                     hk?.addListener(() => {
                         this.controlFlows[currentControlFlowId][ind] = cond()
@@ -110,13 +119,13 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             return createIfListener(
                 [
                     ...this.controlFlowHooks[this.currentControlFlow].map((c) => c).filter(c => c !== null),
-                    ...(value instanceof Hook ? [value] : [])
+                    ...(isHook(value) ? [value] : [])
                 ],
                 () => this.controlFlows[currentControlFlowId][ind]
             )
         }
 
-        if (key.startsWith('@') || !(value instanceof Hook))
+        if (key.startsWith('@') || !isHook(value))
             return super.setAttribute(el, key, value, parserTag);
 
         const hook = value as Hook<any>
@@ -142,6 +151,11 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             )
         }
 
+        if (el && '__puls_inject_hooks_as_value' in el) {
+            super.setAttribute(el, key, hook, parserTag)
+            return;
+        }
+
         const listener = () => {
             super.setAttribute(el, key, hook.value, parserTag)
         }
@@ -152,7 +166,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
     }
 
     createFromValue(value: any) : undefined|Node[] {
-        if (!(value instanceof Hook))
+        if (!isHook(value))
             return super.createFromValue(value);
 
         const hook = value as Hook<any>
@@ -218,7 +232,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
 
 
     setElementStyle(el: Element, key: string, value: any) {
-        if (value instanceof Hook) {
+        if (isHook(value)) {
             this.addListener(el, () => {
                 super.setElementClass(el, key, value.value)
             })
@@ -230,7 +244,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
     }
 
     setElementClass(el: Element, key: string, condition: any) {
-        if (condition instanceof Hook) {
+        if (isHook(condition)) {
             this.addListener(el, condition.addListener(() => {
                 super.setElementClass(el, key, condition.value)
             }))

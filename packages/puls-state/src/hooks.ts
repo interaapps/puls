@@ -8,7 +8,7 @@ export function state<T>(initialValue: T, options: HookOptions = {}): Hook<T> {
 /**
  * If dependencies is not given, the dependencies will be automatically seletected
  */
-export function computed<T>(callable: () => T, dependencies: Hook<any>[]|undefined = undefined): Hook<T> {
+export function computed<T>(callable: () => T, dependencies: (Hook<any>|(() => any))[]|undefined = undefined): Hook<T> {
     const hook = new Hook(callable())
 
     if (dependencies === undefined) {
@@ -23,6 +23,10 @@ export function computed<T>(callable: () => T, dependencies: Hook<any>[]|undefin
         Hook.disableTracking()
     } else {
         for (let dependency of dependencies) {
+            if (typeof dependency === 'function') {
+                track(dependency())
+                continue;
+            }
             dependency.listeners.push(() => {
                 hook.value = callable()
             })
@@ -32,12 +36,31 @@ export function computed<T>(callable: () => T, dependencies: Hook<any>[]|undefin
     return hook
 }
 
+// Cache tracking hooks, because of performance
+const trackedElements: [Hook<any>, string[], Hook<any>][] = []
+
 export function track<T>(callable: () => T) {
+    Hook.enableTracking()
     deepWatchTracker.enableTracking()
     callable()
+    let trackedHooks = Hook.getTracked()
+
     const hook = new Hook<T>(undefined as T)
     if (deepWatchTracker.tracked[deepWatchTracker.tracked.length - 1]) {
         const [trHook, keys] = deepWatchTracker.tracked[deepWatchTracker.tracked.length - 1]
+
+        const alreadyTracked = trackedElements.find(([t, k]) => t === trHook && keys.join('.') === k.join('.'))
+
+        if (alreadyTracked) return alreadyTracked[2]
+
+        let removeListener: any;
+        const setListener = () => {
+            removeListener = hook.addListener(() => {
+                removeListener()
+                setDeepValue(trHook.value, keys, hook.value)
+                setListener()
+            })
+        }
 
         deepWatchTracker.callbacks.push([
             trHook,
@@ -46,14 +69,18 @@ export function track<T>(callable: () => T) {
                 hook.value = getDeepValue(trHook.value, keys)
             }
         ])
+
         hook.value = getDeepValue(trHook.value, keys)
-        hook.addListener(() => {
-            hook.disableDispatch = true
-            setDeepValue(trHook.value, keys, hook.value)
-            hook.disableDispatch = false
-        })
+        setListener()
+
+        trackedElements.push([trHook, keys, hook])
+    } else if (trackedHooks.length > 0) {
+        return trackedHooks[0]
+    } else {
+        console.warn("Couldn't track any values. Maybe you're not using the track function inside a reactive context.", callable)
     }
     deepWatchTracker.disableTracking()
+    Hook.disableTracking()
     return hook
 }
 

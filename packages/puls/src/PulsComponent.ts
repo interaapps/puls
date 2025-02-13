@@ -1,5 +1,4 @@
 import {appendTo, Hook} from "../index";
-import {HookListener} from "pulsjs-state";
 
 export type PulsComponentOptions = {
     shadowed?: boolean;
@@ -10,23 +9,21 @@ export type AttributeOptions = {
 };
 
 export class PulsComponent extends HTMLElement {
+    public readonly __puls_inject_hooks_as_value = true
+
     mainElement: ShadowRoot|HTMLElement|null = null
 
-    #jdomConnectedAlready: boolean = false
-
-    attributeListeners: { key: string, options: AttributeOptions }[] = []
+    #__puls_connected_already: boolean = false
 
     mutationObserver: MutationObserver|null = null
 
     constructor(public options: PulsComponentOptions = {}) {
         super()
         this.options = options
-
-        this.registerAttributeListener()
     }
 
     async connectedCallback() {
-        if (this.#jdomConnectedAlready)
+        if (this.#__puls_connected_already)
             return;
 
         this.addEventListener(':attach', () => this.attach())
@@ -34,10 +31,9 @@ export class PulsComponent extends HTMLElement {
         this.addEventListener(':detach', () => this.detach())
         this.addEventListener(':detached', () => this.detached())
 
-        this.#jdomConnectedAlready = true
+        this.#__puls_connected_already = true
 
         const { shadowed = false, style = null } = this.options
-        this.registerAttributeListener()
 
         this.mainElement = this as HTMLElement
 
@@ -92,57 +88,6 @@ export class PulsComponent extends HTMLElement {
         this.mutationObserver?.observe(this, {attributes: true})
     }
 
-    registerAttributeListener() {
-        if (this.attributeListeners) {
-            for (let attributeListener of this.attributeListeners) {
-                const {key, options: {name = null}} = attributeListener
-                const attrName = name || key
-
-                const hook = (this as any)[key] as any
-                if (hook instanceof Hook) {
-                    hook.value = this.getAttribute(attrName)
-                } else {
-                    (this as Record<any, any>)[key] = this.getAttribute(attrName)
-                }
-
-                let lastListener: HookListener<any>|null = null
-                this.addEventListener(':attributechanged', e => {
-                    const { detail: { mutation } } = e as CustomEvent
-
-                    if (!lastListener) {
-                        const hook = (this as any)[key] as Hook<any>
-                        const listener = hook.addListener(val => {
-                            this.setAttribute(attrName, val)
-                        })
-                        lastListener = listener
-
-                        this.addEventListener(':detached', e => hook.removeListener(listener))
-                    }
-
-                    if (mutation.attributeName === attrName) {
-                        const attrVal = this.getAttribute(attrName)
-                        const v = (this as any)[key] as any
-                        if (v instanceof Hook) {
-                            if (v.value !== attrVal) {
-                                v.value = attrVal
-                            }
-                        } else {
-                            (this as Record<any, any>)[key] = attrVal as any
-                        }
-                    }
-                })
-            }
-        }
-    }
-
-    /**
-     * @param key
-     * @param options
-     */
-    addAttributeListener(key: string, options: AttributeOptions = {}) {
-        this.attributeListeners.push({ key, options })
-    }
-
     setup(): void|Promise<void> {}
 
     detach() {}
@@ -178,12 +123,10 @@ export class PulsComponent extends HTMLElement {
                     (this as any)[key] = value.value
                 })
                 ;(this as any)[key] = value.value
+            } else if (!(value instanceof Hook) && v instanceof Hook) {
+                ;(this as any)[key].value = value
             } else {
-                if (v instanceof Hook) {
-                    v.value = value
-                } else {
-                    ;(this as any)[key] = value
-                }
+                ;(this as any)[key] = value
             }
         } else {
             super.setAttribute(key, value)

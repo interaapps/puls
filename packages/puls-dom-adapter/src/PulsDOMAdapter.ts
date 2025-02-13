@@ -6,7 +6,8 @@ import {
     OnUnmount,
     OnUnmounted,
     PulsAdapter,
-    resetLifecycleHooks
+    resetLifecycleHooks,
+    currentLifecycleDefines
 } from "pulsjs-adapter";
 
 export type ValueTransformer<T> = {
@@ -28,6 +29,25 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         return this.documentOverride ?? window.document
     }
 
+    setLifecycleDefines(tag: any, attributes: Record<string, any>, slot: any) {
+        currentLifecycleDefines.exports = {}
+        currentLifecycleDefines.props = attributes
+        currentLifecycleDefines.slot = slot
+        currentLifecycleDefines.emitsFunction = (name: string, ...args: any) => {
+            const fn = attributes[`@${name}`]
+            if (fn) {
+                return fn(...args)
+            }
+        }
+    }
+
+    clearLifecycleDefines() {
+        currentLifecycleDefines.emitsFunction = undefined
+        currentLifecycleDefines.props = {}
+        currentLifecycleDefines.emitsFunction = undefined
+        currentLifecycleDefines.slot = undefined
+    }
+
     partTransformers: Record<string, (part: ParserOutput) => any> = {
         'text': (part) => [this.document.createTextNode((part as ParserText).value)],
         'element': (part) => {
@@ -39,16 +59,34 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 if ('prototype' in conf.tag && conf.tag.prototype instanceof HTMLElement) {
                     out = this.createFromValue(this.createElement(conf))
                 } else {
+                    // Function Components Implementation
+
+                    for (const [key, value] of conf.attributes) {
+                        if (key === ':if' || key === ':else-if' || key === ':else') {
+                            return this.setConditionFlowAttribute(key, value, conf)
+                        }
+                    }
+
+                    const attributes: Record<string, any> = conf.attributes.reduce((acc, [key, value]) => ({
+                        ...acc,
+                        [key]: value
+                    }), {})
+
+                    const slot = (conf.body.length > 0 ? (new (this.constructor as new (b: ParserOutput[]) => PulsDOMAdapter)(conf.body)).render() : undefined)
+
+                    this.setLifecycleDefines(conf.tag, attributes, slot)
+
+                    // Call function component
                     out = this.createFromValue((conf.tag as (values: any) => any)({
-                        ...conf.attributes.reduce((acc, [key, value]) => ({
-                                ...acc,
-                                [key]: value
-                            }), {}),
-
-                        ...(conf.attributes.find(([k]) => k === ':props')?.[1] || {}),
-
-                        $slot: (conf.body.length > 0 ? (new (this.constructor as new (b: ParserOutput[]) => PulsDOMAdapter)(conf.body)).render() : undefined),
+                        ...attributes,
+                        $slot: slot
                     }))
+
+                    this.clearLifecycleDefines()
+
+                    if (':ref' in attributes) {
+                        attributes[':ref'](...(out || []), currentLifecycleDefines.exports)
+                    }
                 }
 
                 let lifeCycleComment: undefined|Comment= undefined
@@ -181,41 +219,45 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         }
     }
 
+    setConditionFlowAttribute(key: string, value: any, parserTag: ParserTag) {
+        if (key === ':if') {
+            this.currentControlFlow = this.controlFlows.push([value]) - 1
+            if (!value) {
+                return this.document.createComment('if')
+            }
+        }
+        if (key === ':else-if') {
+            if (typeof this.controlFlows[this.currentControlFlow] === 'undefined') {
+                throw new Error('else-if without if')
+            }
+
+            let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
+            this.controlFlows[this.currentControlFlow].push(value)
+
+            if (!(isElse && value)) {
+                return this.document.createComment('if')
+            }
+        }
+        if (key === ':else') {
+            if (typeof this.controlFlows[this.currentControlFlow] === 'undefined') {
+                throw new Error('else without if before')
+            }
+
+            let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
+
+            if (!isElse) {
+                return this.document.createComment('if')
+            }
+        }
+        return this.createElement({
+            ...parserTag,
+            attributes: parserTag.attributes.filter(([k]) => k !== key)
+        })
+    }
+
     setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag): Node|undefined {
         if (key === ':if' || key === ':else-if' || key === ':else') {
-            if (key === ':if') {
-                this.currentControlFlow = this.controlFlows.push([value]) - 1
-                if (!value) {
-                    return this.document.createComment('if')
-                }
-            }
-            if (key === ':else-if') {
-                if (typeof this.controlFlows[this.currentControlFlow] === 'undefined') {
-                    throw new Error('else-if without if')
-                }
-
-                let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
-                this.controlFlows[this.currentControlFlow].push(value)
-
-                if (!(isElse && value)) {
-                    return this.document.createComment('if')
-                }
-            }
-            if (key === ':else') {
-                if (typeof this.controlFlows[this.currentControlFlow] === 'undefined') {
-                    throw new Error('else without if before')
-                }
-
-                let isElse = !this.controlFlows[this.currentControlFlow].includes(true)
-
-                if (!isElse) {
-                    return this.document.createComment('if')
-                }
-            }
-            return this.createElement({
-                ...parserTag,
-                attributes: parserTag.attributes.filter(([k]) => k !== key)
-            })
+            return this.setConditionFlowAttribute(key, value, parserTag)
         }
 
         if (el === undefined) return;

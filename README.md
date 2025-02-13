@@ -71,7 +71,8 @@ const hello = state({
     world: 'example'
 }, { deep: true })
 
-watch([track(() => hello.value)], () => {
+// only refreshes when hello changes
+watch([track(() => hello.value.hello)], () => {
     console.log('Hello changed')
 })
 
@@ -94,6 +95,31 @@ html`
     <${ExampleComponent} example="hello world" />
 `
 ```
+
+#### Function Components Life-Cycle hooks
+
+```ts
+import {defineEmits, defineProps, defineSlot, html, onMounted} from "pulsjs";
+
+function ExampleComponent() {
+    const props = defineProps<{
+        example: string;
+    }>()
+    const emit = defineEmits()
+    const slot = defineSlot<Node[]>()
+
+    onMounted(() => {
+        console.log('Mounted')
+    })
+    
+    onUnmounted(() => {
+        console.log('Unmounted')
+    })
+
+    return html``
+}
+```
+
 ### Class components
 ```js
 import { html } from 'pulsjs'
