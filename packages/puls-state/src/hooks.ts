@@ -151,3 +151,11 @@ export function bind<T>(component: HTMLElement, attr = 'value'): Hook<T> {
 
     return hook
 }
+
+/**
+ * A helper function to trigger watchers
+ */
+export function trigger() {
+    const hook = state(0)
+    return {hook, push: () => hook.value++}
+}

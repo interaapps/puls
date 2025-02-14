@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-state",
-  "version": "1.0.11-prealpha",
+  "version": "1.0.12-prealpha",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

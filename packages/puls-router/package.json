@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-router",
-  "version": "1.0.11-prealpha",
+  "version": "1.0.12-prealpha",
   "description": "",
   "main": "dist/index.js",
   "scripts": {

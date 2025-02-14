@@ -423,26 +423,26 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             this.afterElement(el, e)
             el = e
 
+            // TODO Fix reactive list bugs
             const addReplaceListener = (toRepl: ChildNode) => {
                 const events = new Map<string, any>()
                 events.set(':replace_with', ({detail: {from, to}}: any) => {
-                    console.count()
-                    console.log(from, to)
-                    events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
                     for (const innerEl of to) {
-                        if (!elements.includes(innerEl)) {
-                            elements.push(innerEl)
+                        if (!from.includes(innerEl)) {
                             addReplaceListener(innerEl)
                         }
                     }
                 })
 
                 events.set(':detached', () => {
-                    events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
-                    elements.splice(elements.findIndex(el => el === toRepl), 1)
+                    const isEl = elements.findIndex(el => el === toRepl)
+
+                    if (isEl !== -1) {
+                        events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
+                        elements.splice(isEl, 1)
+                    }
                 })
                 events.set(':attached', () => {
-                    events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
                     if (!elements.includes(toRepl)) {
                         elements.push(toRepl)
                     }
