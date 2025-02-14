@@ -168,12 +168,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 el = el.map(e => this.createFromValue(e)).filter(e => e !== undefined).flat()
                 value = value.map((e: any) => this.createFromValue(e)).flat()
 
-                if (value.length === 0) value.push(this.document.createComment('array'))
-
-                value.forEach((e: ChildNode) => {
-                    this.beforeElement(el[0] as HTMLElement, e)
-                })
-                el.forEach(e => this.removeElement(e))
+                this.replaceElements(el, value)
 
                 return value
             })
@@ -189,17 +184,21 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         {
             type: 'promise',
             test: (value: any) => typeof value === 'object' && value instanceof Promise,
-            create: (value: any) => {
+            create: (value: Promise<any>) => {
                 const promisePlaceholder = this.document.createComment('promise')
+                let returns: ChildNode[] = [promisePlaceholder]
 
-                value.then((v: any) => {
-                    const fromValue = this.createFromValue(v)
-                    if (fromValue?.[0]) {
-                        this.replaceElement(promisePlaceholder, fromValue[0] as ChildNode)
-                    }
+                queueMicrotask(() => {
+                    value.then((v: any) => {
+                        const fromValue = this.createFromValue(v)
+
+                        if (fromValue?.[0]) {
+                            this.replaceElements([promisePlaceholder], fromValue as ChildNode[])
+                        }
+                    })
                 })
 
-                return [promisePlaceholder]
+                return returns
             },
             set: (el, value: any) => {}
         } as ValueTransformer<ChildNode>,
@@ -383,9 +382,25 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
     replaceElement(el1: ChildNode, el2: ChildNode) {
         el1.dispatchEvent(new CustomEvent(':detach', {detail: {el: el1}}))
         el2.dispatchEvent(new CustomEvent(':attach', {detail: {el: el2}}))
+        el1.dispatchEvent(new CustomEvent(':replace_with', { detail: { from: [el1], to: [el2] } }))
         el1.replaceWith(el2);
+        el1.dispatchEvent(new CustomEvent(':replaced_with', { detail: { from: [el1], to: [el2] } }))
         el1.dispatchEvent(new CustomEvent(':detached', {detail: {el: el1}}))
         el2.dispatchEvent(new CustomEvent(':attached', {detail: {el: el2}}))
+    }
+
+    replaceElements(oldEls: ChildNode[], elements: ChildNode[]) {
+        const firstEl = oldEls[0]
+        firstEl.dispatchEvent(new CustomEvent(':replace_with', { detail: { from: oldEls, to: elements } }))
+
+        oldEls.slice(1).forEach((e) => {
+            this.removeElement(e as ChildNode)
+        })
+        if (elements.length === 0) elements.push(this.document.createComment('hook element'))
+        this.afterElements(firstEl, elements)
+
+        firstEl.dispatchEvent(new CustomEvent(':replaced_with', { detail: { from: oldEls, to: elements } }))
+        this.removeElement(firstEl)
     }
 
     removeElement(el: ChildNode) {
@@ -403,6 +418,42 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         el.dispatchEvent(new CustomEvent(':attach', {detail: {el}}))
         parent.after(el)
         el.dispatchEvent(new CustomEvent(':attached', {detail: {el}}))
+    }
+
+    afterElements(el: ChildNode, elements: ChildNode[]) {
+        elements.forEach(e => {
+            this.afterElement(el, e)
+            el = e
+
+            const addReplaceListener = (toRepl: ChildNode) => {
+                const events = new Map<string, any>()
+                events.set(':replace_with', ({detail: {from, to}}: any) => {
+                    console.count()
+                    console.log(from, to)
+                    events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
+                    for (const innerEl of to) {
+                        if (!elements.includes(innerEl)) {
+                            elements.push(innerEl)
+                            addReplaceListener(innerEl)
+                        }
+                    }
+                })
+
+                events.set(':detached', () => {
+                    events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
+                    elements.splice(elements.findIndex(el => el === toRepl), 1)
+                })
+                events.set(':attached', () => {
+                    events.forEach((value, key) => toRepl.removeEventListener(key, value as any))
+                    if (!elements.includes(toRepl)) {
+                        elements.push(toRepl)
+                    }
+                })
+                events.forEach((value, key) => toRepl.addEventListener(key, value as any))
+            }
+
+            addReplaceListener(e)
+        })
     }
 
     appendChild(parent: ChildNode, el: Node) {

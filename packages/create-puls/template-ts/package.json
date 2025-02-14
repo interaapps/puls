@@ -13,6 +13,6 @@
     "vite": "^6.1.0"
   },
   "dependencies": {
-    "pulsjs": "1.0.10-prealpha"
+    "pulsjs": "1.0.11-prealpha"
   }
 }

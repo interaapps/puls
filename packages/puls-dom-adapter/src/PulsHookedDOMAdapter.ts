@@ -185,15 +185,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
                 let newElements = this.valueTransformers.find(transformer => transformer.type === type)?.create(hook.value)!
 
                 if (newElements) {
-                    newElements.forEach(e => {
-                        this.afterElement(els[0] as ChildNode, e)
-                    })
-                    if (newElements.length === 0) newElements.push(this.document.createComment('hook element'))
-                    els.forEach(e => {
-                        e!.removeEventListener(':detach', removeListener!)
-                        this.removeElement(e as ChildNode)
-                    })
-
+                    this.replaceElements(els as ChildNode[], newElements)
                     els = newElements
                     updateListeners = true
                 }
@@ -216,7 +208,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
 
             if (updateListeners) {
                 for (let el of els) {
-                    el!.addEventListener(':detach', removeListener!)
+                   // el!.addEventListener(':detach', removeListener!)
                 }
             }
 
@@ -241,6 +233,11 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         }
 
         super.setElementStyle(el, key, value)
+    }
+
+    removeElement(el: ChildNode) {
+        this.elementListeners.get(el)?.forEach(l => l())
+        super.removeElement(el);
     }
 
     setElementClass(el: Element, key: string, condition: any) {

@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-adapter",
-  "version": "1.0.10-prealpha",
+  "version": "1.0.11-prealpha",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
