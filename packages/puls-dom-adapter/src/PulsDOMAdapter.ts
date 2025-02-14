@@ -188,14 +188,12 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
                 const promisePlaceholder = this.document.createComment('promise')
                 let returns: ChildNode[] = [promisePlaceholder]
 
-                queueMicrotask(() => {
-                    value.then((v: any) => {
-                        const fromValue = this.createFromValue(v)
+                value.then((v: any) => {
+                    const fromValue = this.createFromValue(v)
 
-                        if (fromValue?.[0]) {
-                            this.replaceElements([promisePlaceholder], fromValue as ChildNode[])
-                        }
-                    })
+                    if (fromValue?.[0]) {
+                        this.replaceElements([promisePlaceholder], fromValue as ChildNode[])
+                    }
                 })
 
                 return returns

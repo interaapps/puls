@@ -121,6 +121,20 @@ test('dom-adapter-promise', async () => {
     await promiseValue
     expect(div).toMatchSnapshot()
 })
+test('dom-adapter-promise-instant', async () => {
+    const promiseValue = new Promise(resolve => setTimeout(() => resolve('Async Loaded!')))
+    const d = new PulsDOMAdapter(html`
+        <div>
+            <p>${promiseValue}</p>
+        </div>
+    `.parse())
+
+    const [div] = d.render()
+    expect(div).toMatchSnapshot()
+
+    await promiseValue
+    expect(div).toMatchSnapshot()
+})
 
 test('dom-adapter-slots', () => {
     const TestComponent = (props: { $slot?: any }) => new PulsDOMAdapter(html`

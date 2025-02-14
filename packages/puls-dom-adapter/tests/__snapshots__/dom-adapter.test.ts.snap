@@ -96,6 +96,22 @@ exports[`dom-adapter-promise 2`] = `
 </div>
 `;
 
+exports[`dom-adapter-promise-instant 1`] = `
+<div>
+  <p>
+    <!--promise-->
+  </p>
+</div>
+`;
+
+exports[`dom-adapter-promise-instant 2`] = `
+<div>
+  <p>
+    Async Loaded!
+  </p>
+</div>
+`;
+
 exports[`dom-adapter-slots 1`] = `
 <div>
   <div>
