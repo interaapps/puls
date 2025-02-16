@@ -1,5 +1,4 @@
 # PULS
-
 ```js
 import { html, appendTo, state } from 'pulsjs'
 
@@ -11,6 +10,10 @@ appendTo(document.body, html`
     <input :bind=${name}>
 `)
 ```
+Puls is a reactive web framework that uses the DOM directly.
+It is inspired by Svelte and Vue. Puls is designed to be simple and fast. It is a great choice for small to medium-sized projects.
+
+**No compiler is required** but if you want, there are .puls component files or JSX support.
 
 ## Installation
 ```bash
@@ -62,7 +65,7 @@ appendTo(document.body, html`
 `)
 ```
 
-### State Helper
+### Deep tracking
 ```js
 import { track, state } from 'pulsjs'
 
@@ -83,9 +86,7 @@ watch([track(() => hello.value.hello)], () => {
 ```js
 import { html } from 'pulsjs'
 
-function ExampleComponent({
-    example
-}) {
+function ExampleComponent({ example }) {
     return html`
         <p>Example component ${example}</p>
     `
@@ -137,7 +138,7 @@ class ExampleComponent extends PulsComponent {
         `
     }
 }
-registerComponent('exmaple-component', ExampleComponent)
+registerComponent('example-component', ExampleComponent)
 
 // Typescript
 @CustomElement('example-component')

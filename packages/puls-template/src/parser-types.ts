@@ -1,7 +1,7 @@
 export type ParserAttribute = [string, any]
 export type ParserTag = {
     type: 'element',
-    tag: string|Function,
+    tag: any,
     attributes: ParserAttribute[],
     body: ParserOutput[],
     from: number,

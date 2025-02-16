@@ -17,70 +17,59 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         this.elementListeners.get(el)?.push(listener)
     }
 
-    setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag) {
-        if (el && key.startsWith(':bind')) {
-            const field = key.split(':')[2] || 'value'
-
-            if (typeof value === 'function')
-                value = track(value)
-
-            if (!isHook(value)) throw new Error(`Expected a hook on :bind. Got ${typeof value}`)
-
-            const hook = value as Hook<any>
-
-            let removeListener: any;
-            const setListener = () => {
-                removeListener = hook.addListener(() => {
-                    (el as any)[field] = hook.value
-                })
-            }
-            setListener()
-
-            el.addEventListener(field === 'value' ? 'input' : `input:${field}`, () => {
-                removeListener()
-                hook.setValue((el as any)[field]);
-                setListener()
-            })
-            ;(el as any)[field] = hook.value
-            return
+    removeListener(el: ChildNode, listener: () => void) {
+        const foundListener = this.elementListeners.get(el)?.indexOf(listener)
+        if (foundListener !== undefined && foundListener !== -1) {
+            this.elementListeners.get(el)?.splice(foundListener, 1)
         }
+    }
 
+
+    setConditionFlowAttribute(key: string, value: any, parserTag: ParserTag) {
         if ((key === ':if' || key === ':else-if') && typeof value === "function") {
             value = computed(value)
         }
 
+
         const createIfListener = (deps: Hook<any>[], index: () => boolean) => {
-            let overrideEl: Element|Comment|undefined = undefined
-            let shownElement: ChildNode|undefined = undefined
-            const comment = this.document.createComment('if element')
+            let overrideEl: ChildNode[]|undefined = undefined
+            let shownElement: ChildNode[]|undefined = undefined
+            const comment = [this.document.createComment('if element')]
+
+            const addHooks = () => {
+                deps.forEach(dep =>  {
+                    const rm = dep.addListener(listener)
+                    this.addListener(overrideEl![0]!, rm)
+                })
+            }
+
             const listener = () => {
                 if (index()) {
                     if (overrideEl === comment || overrideEl === undefined) {
-                        shownElement = this.createElement({
+                        shownElement = this.addPart({
                             ...parserTag,
                             attributes: parserTag.attributes.filter(([k]) => k !== key)
-                        }) as Element
+                        }) as ChildNode[]
 
                         if (overrideEl) {
-                            this.replaceElement(overrideEl, shownElement)
+                            this.replaceElements(overrideEl, shownElement)
+                            addHooks()
                         }
                     }
-                    overrideEl = shownElement as Element
+                    overrideEl = shownElement
                 } else {
                     if (overrideEl === shownElement || overrideEl === undefined) {
                         if (overrideEl) {
-                            this.replaceElement(overrideEl, comment)
+                            this.replaceElements(overrideEl, [...comment])
+                            addHooks()
                         }
                     }
                     overrideEl = comment
                 }
             }
-
             listener()
-            deps.forEach(dep =>  {
-                this.addListener(overrideEl!, dep.addListener(listener))
-            })
-            return overrideEl
+            addHooks()
+            return overrideEl!
         }
 
 
@@ -125,15 +114,10 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
             )
         }
 
-        if (key.startsWith('@') || !isHook(value))
-            return super.setAttribute(el, key, value, parserTag);
+        if (!isHook(value))
+            return super.setConditionFlowAttribute(key, value, parserTag)
 
         const hook = value as Hook<any>
-
-        if (key === ':ref') {
-            hook.value = el
-            return;
-        }
 
         if (key === ':if') {
             const cond = () => !!hook.value
@@ -149,6 +133,47 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
                 [hook],
                 () => this.controlFlows[currentControlFlowId][0]
             )
+        }
+        return super.setConditionFlowAttribute(key, value, parserTag)
+    }
+
+    setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag) {
+        if (el && key.startsWith(':bind')) {
+            const field = key.split(':')[2] || 'value'
+
+            if (typeof value === 'function')
+                value = track(value)
+
+            if (!isHook(value)) throw new Error(`Expected a hook on :bind. Got ${typeof value}`)
+
+            const hook = value as Hook<any>
+
+            let removeListener: any;
+            const setListener = () => {
+                removeListener = hook.addListener(() => {
+                    (el as any)[field] = hook.value
+                })
+                this.addListener(el, removeListener)
+            }
+            setListener()
+
+            el.addEventListener(field === 'value' ? 'input' : `input:${field}`, () => {
+                removeListener()
+                hook.setValue((el as any)[field]);
+                setListener()
+            })
+            ;(el as any)[field] = hook.value
+            return
+        }
+
+        if (key.startsWith('@') || !isHook(value))
+            return super.setAttribute(el, key, value, parserTag);
+
+        const hook = value as Hook<any>
+
+        if (key === ':ref') {
+            hook.value = el
+            return;
         }
 
         if (el && '__puls_inject_hooks_as_value' in el) {
@@ -174,7 +199,7 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         let els: Node[] = [this.document.createComment('hook element')];
         let lastType: string|undefined = undefined
 
-        let removeListener = null;
+        let removeListener: (() => void)|undefined = undefined;
 
         const listener = () => {
             const type = this.valueTransformers.find(transformer => transformer.test(hook.value))?.type
@@ -189,26 +214,28 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
                     els = newElements
                     updateListeners = true
                 }
-            } else {
-                if (type === 'array') {
-                    for (let el of els) {
-                        el.removeEventListener(':detach', removeListener!)
-                    }
-                }
 
+
+                /*if (type === 'array') {
+                    console.log('removing', lastType, '->', type, removeListener)
+                    this.removeListener(els[0] as ChildNode, removeListener as any)
+                }
+                if (type !== 'array') {
+                    console.log('adding', lastType, '->', type, removeListener)
+                    this.addListener(els[0] as ChildNode, removeListener as any)
+                }*/
+
+            } else {
+                if (type === 'array' && els.length === 0) {
+                    removeListener?.();
+                    return;
+                }
                 const v = this.valueTransformers
                     .find(transformer => transformer.type === type)
                     ?.set?.(els! as any, hook.value)
 
                 if (v) {
-                    updateListeners = true
                     els = v
-                }
-            }
-
-            if (updateListeners) {
-                for (let el of els) {
-                   // el!.addEventListener(':detach', removeListener!)
                 }
             }
 
@@ -225,9 +252,9 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
 
     setElementStyle(el: Element, key: string, value: any) {
         if (isHook(value)) {
-            this.addListener(el, () => {
+            this.addListener(el, value.addListener(() => {
                 super.setElementClass(el, key, value.value)
-            })
+            }))
 
             super.setElementStyle(el, key, value.value)
         }
@@ -236,8 +263,19 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
     }
 
     removeElement(el: ChildNode) {
-        this.elementListeners.get(el)?.forEach(l => l())
         super.removeElement(el);
+        if (this.elementListeners.has(el)) {
+            this.elementListeners.get(el)?.forEach(l => l())
+            this.elementListeners.delete(el)
+        }
+    }
+
+    replaceElement(el1: ChildNode, el2: ChildNode) {
+        super.replaceElement(el1, el2);
+        if (this.elementListeners.has(el1)) {
+            this.elementListeners.get(el1)?.forEach(l => l())
+            this.elementListeners.delete(el1)
+        }
     }
 
     setElementClass(el: Element, key: string, condition: any) {

@@ -80,7 +80,7 @@ export class TemplateParser extends TemplateParserBase {
             if (afterClosingSlash.type === 'value') {
                 if (afterClosingSlash.value === tag.tag) {
                     isEnding = true
-                    tag.attributes.push(['slot', tag.body])
+                    // tag.attributes.push(['slot', tag.body])
                     this.next()
                 }
             } else {
