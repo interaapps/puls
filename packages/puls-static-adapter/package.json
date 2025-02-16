@@ -1,6 +1,6 @@
 {
   "name": "pulsjs-static-adapter",
-  "version": "1.0.12-prealpha",
+  "version": "1.0.13-prealpha",
   "description": "",
   "main": "dist/index.js",
   "dependencies": {
