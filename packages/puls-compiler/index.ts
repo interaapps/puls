@@ -18,16 +18,17 @@ function parseTemplateString(input: string) {
     let buffer = "";
     let insideExpression = false;
     let insideString = false;
-    let braceCount = 0;
+    let braceCount = 0
 
-    for (let i = 0; i < input.length; i++) {
+
+    
+for (let i = 0; i < input.length; i++) {
         if (!insideExpression) {
             if (input[i] === "$" && input[i + 1] === "{") {
                 strings.push(buffer);
                 buffer = "";
                 insideExpression = true;
                 braceCount = 1;
-                i++; // Skip "{"
             } else if (input[i] === "\\" && input[i + 1] === "$" && input[i + 2] === "{") {
                 buffer += "${";
                 i += 2;
@@ -101,7 +102,7 @@ export async function compile(r: string) {
                     const ts = await import('typescript')
                     const { outputText } = ts.transpileModule(scriptValue, {
                         compilerOptions: {
-                            experimentalDecorators: true,
+                            experimentalDecorators: false,
                             module: ts.ModuleKind.ESNext,
                             target: ts.ScriptTarget.ESNext,
                             moduleResolution: ts.ModuleResolutionKind.NodeJs,
@@ -133,7 +134,7 @@ export async function compile(r: string) {
 
     const [strings, values] = parseTemplateString(other)
     const second = templateStringParse(new TemplateParser(), strings as any, ...values).parse();
-
+    console.count()
     return `${extractedImports}${hasHtmlImport ? '' : "\nimport { pulsInstance } from 'pulsjs';"}\n\nexport default ($props = {}) => {
     \n    ${scriptTag}\n    \n    return (new pulsInstance.adapter(${exportOutput(second)})).render();
 }`;
@@ -141,9 +142,10 @@ export async function compile(r: string) {
 
 
 export async function pulsPlugin() {
+    console.log('Example')
     return {
         name: 'vite-plugin-puls',
-        transform: async (code: any, id: any) => {
+        transform: async x(code: any, id: any) => {
             if (!id.endsWith('.puls')) return null;
             fs.writeFileSync('ex', code)
 
