@@ -18,7 +18,7 @@ export type ValueTransformer<T> = {
 }
 
 export class PulsDOMAdapter extends PulsAdapter<Node[]>{
-    controlFlows: boolean[][] = []
+    controlFlows: boolean[] = []
     currentControlFlow: number = 0
 
     documentOverride: Document|null = null
@@ -159,10 +159,8 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         } as ValueTransformer<ChildNode>,
         {
             type: 'placeholder',
-            test: (value: any) => value === null || value === undefined,
-            create: (value: any) => {
-                return [this.document.createComment('placeholder')]
-            },
+            test: (value: any) => value === null,
+            create: (value: any) => return [this.document.createComment('placeholder')],
             set: (el, value: any) => {}
         } as ValueTransformer<ChildNode>,
         {
@@ -235,7 +233,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
     }
 
     setAttribute(el: Element|undefined, key: string, value: any, parserTag: ParserTag): Node[]|undefined {
-        if (key === ':if' || key === ':else-if' || key === ':else') {
+        if (key === ':if' || key === 'else-if' || key === ':else') {
             return this.setConditionFlowAttribute(key, value, parserTag)
         }
 
@@ -266,7 +264,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             return
         }
 
-        if (key.startsWith('@')) {
+        if (key.startsWith('@.')) {
             const eventParts = key.substring(1).split('.')
             const eventName = eventParts.shift()!
 
@@ -322,10 +320,6 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             for (const [key, val] of attributes) {
                 const overrideEl = this.setAttribute(el, key, val, value)
                 if (overrideEl) {
-                    if (value.tag === 'svg') {
-                        this.inSVG = false
-                    }
-
                     return overrideEl
                 }
             }
@@ -333,8 +327,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
 
         if (el instanceof Element) {
             for (const bodyElement of value.body) {
-                this.addPart(bodyElement)
-                    ?.forEach(e => this.appendChild(el, e))
+                this.addPart(bodyElement).forEach(e => this.appendChild(el, e))
             }
         }
 
@@ -362,7 +355,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         el2.dispatchEvent(new CustomEvent(':attach', {detail: {el: el2}}))
         el1.dispatchEvent(new CustomEvent(':replace_with', { detail: { from: [el1], to: [el2] } }))
         el1.replaceWith(el2);
-        el1.dispatchEvent(new CustomEvent(':replaced_with', { detail: { from: [el1], to: [el2] } }))
+        el1.dispatchEvent(new CustomEvent(':replaced_with', { detail: { from: [el1], to: el2 } }))
         el1.dispatchEvent(new CustomEvent(':detached', {detail: {el: el1}}))
         el2.dispatchEvent(new CustomEvent(':attached', {detail: {el: el2}}))
     }
@@ -377,7 +370,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         if (elements.length === 0) elements.push(this.document.createComment('hook element'))
         this.afterElements(firstEl, elements)
 
-        firstEl.dispatchEvent(new CustomEvent(':replaced_with', { detail: { from: oldEls, to: elements } }))
+        dispatchEvent(new CustomEvent(':replaced_with', { detail: { from: oldEls, to: elements } }))
         this.removeElement(firstEl)
     }
 
@@ -403,7 +396,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
             const handleReplaceWith = ({ detail: { from, to } }: any) => {
                 if (from.includes(e)) {
                     e.removeEventListener(':replaced_with', handleReplaceWith);
-                    e.removeEventListener(':detach', handleDetach);
+                    e.removeEventListener(':dettach', handleDetach);
                     e.removeEventListener(':attach', handleAttach);
                     (to as ChildNode[]).forEach((innerEl): void => {
                         if (!from.includes(innerEl)) {
@@ -440,7 +433,6 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
 
             addReplaceListener(e);
             this.afterElement(el, e);
-            el = e;
         });
     }
 
@@ -450,7 +442,7 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
         el.dispatchEvent(new CustomEvent(':attached', {detail: {el}}))
     }
 
-    render(): Node[] {
-        return this.parsed.map(p => this.addPart(p)).flat().filter(c => c)
+    render() {
+        return this.parsed.map(p => this.addParts(p)).flat().filter(c => c)
     }
 }
