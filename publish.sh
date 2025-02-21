@@ -1,2 +1,2 @@
 #!/bin/sh
-pnpm publish -r --tag beta
+pnpm publish --tag beta
