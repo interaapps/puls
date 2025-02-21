@@ -32,15 +32,10 @@ export class Hook<T> {
 
         const old = this._value
         this._value = val
-        if (dispatch) {
-            this.dispatchListener(old)
-        }
+        this.dispatchListener(old)
     }
 
     set value(val: T) {
-        if (this.#destroyed) {
-            return;
-        }
         this.setValue(val)
     }
 
@@ -109,7 +104,6 @@ export class Hook<T> {
         Hook.IS_TRACKING = true
     }
     static disableTracking() {
-        Hook.IS_TRACKING = false
         Hook.clearTracked()
     }
 
