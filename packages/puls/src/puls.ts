@@ -10,16 +10,18 @@ export function createPuls<T>({
     adapter?: null|(new (val: ParserOutput[]) => PulsAdapter<any>),
     templateParser?: new () => TemplateParserBase
 }) {
-    if (!adapter) throw new Error('No adapter provided')
 
     const parser = createTemplateFunction(TemplateParser)
 
-    return {
+    const ret = {
         parser,
         templateParser,
         adapter,
         html(parts: TemplateStringsArray, ...values: any) : T {
-            return new adapter(parser(parts, ...values).parse()).render() as T
+            if (!ret.adapter) throw new Error('No adapter provided');
+            return new ret.adapter(parser(parts, ...values).parse()).render() as T
         }
     }
+
+    return ret
 }

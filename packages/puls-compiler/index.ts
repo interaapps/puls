@@ -6,6 +6,7 @@ import {
     templateStringParse
 } from "pulsjs-template";
 import fs from "node:fs";
+import {Project} from "ts-morph";
 
 class RealValue {
     constructor(public value?: any) {
@@ -91,12 +92,31 @@ export async function compile(r: string) {
 
     const promises: Promise<void>[] = []
 
+    let generic: string|undefined = undefined
+
     templateParser.filterElements = (e: ParserTag) => {
         if (e.tag === 'script') {
             promises.push(new Promise<void>(async (res) => {
                 const lang = e.attributes.find(([k]) => k === 'lang')?.[1]
 
+                generic = e.attributes.find(([k]) => k === 'generics')?.[1]
+
                 let scriptValue = (e.body[0] as ParserText).value
+
+
+                const proj = new Project({
+                    useInMemoryFileSystem: true,
+                })
+                const sourceFile = proj.createSourceFile('example.ts', scriptValue)
+                sourceFile.getImportDeclarations().forEach((imp) => {
+                    hasHtmlImport = hasHtmlImport || !!imp.getNamedImports().find(n => n.getName() === 'pulsInstance')
+                    extractedImports += imp.getFullText() + '\n'
+                    imp.remove()
+                })
+
+                scriptValue = sourceFile.getFullText();
+
+
                 if (lang === 'ts') {
                     const ts = await import('typescript')
                     const { outputText } = ts.transpileModule(scriptValue, {
@@ -106,19 +126,14 @@ export async function compile(r: string) {
                             target: ts.ScriptTarget.ESNext,
                             moduleResolution: ts.ModuleResolutionKind.NodeJs,
                             esModuleInterop: true,
+                            noUnusedLocals: false,
+                            noUnusedParameters: false,
+                            allowUnusedLabels: true
                         }
                     })
                     scriptValue = outputText;
                 }
                 scriptTag = scriptValue;
-
-                const importRegex = /import\s+(((?:type\s+)?(?:\*\s+as\s+\w+|{[^}]+}|\w+)\s+from\s+['"][^'"]+['"](?:\s+with\s+{[^}]+})?\s*)|(['"][^'"]+['"]));?/g;
-                const imports = scriptTag.match(importRegex) || [];
-
-                hasHtmlImport = imports.some(i => /import\s+.*\bhtml\b.*from\s+['"]pulsInstance['"]/.test(i));
-
-                extractedImports = imports.join('\n');
-                scriptTag = scriptTag.replace(importRegex, '').trim();
 
                 other = r.substring(0, e.from) + r.substring(e.to);
                 res()
@@ -134,7 +149,7 @@ export async function compile(r: string) {
     const [strings, values] = parseTemplateString(other)
     const second = templateStringParse(new TemplateParser(), strings as any, ...values).parse();
 
-    return `${extractedImports}${hasHtmlImport ? '' : "\nimport { pulsInstance } from 'pulsjs';"}\n\nexport default ($props = {}) => {
+    return `${extractedImports}${hasHtmlImport ? '' : "\nimport { pulsInstance } from 'pulsjs';"}\n/* ${generic ? `@template ${generic}` : ''} */\nexport default ($props = {}) => {
     \n    ${scriptTag}\n    \n    return (new pulsInstance.adapter(${exportOutput(second)})).render();
 }`;
 }

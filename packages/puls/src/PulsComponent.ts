@@ -8,7 +8,11 @@ export type AttributeOptions = {
     name?: string | null | undefined;
 };
 
-export class PulsComponent extends HTMLElement {
+export class PulsComponent extends (typeof HTMLElement === 'undefined' ? class {
+    constructor() {
+        console.error("Your Runtime can't create a PulsComponent. This may result into errors. HTMLElement is not defined.")
+    }
+} as new() => HTMLElement : HTMLElement) {
     public readonly __puls_inject_hooks_as_value = true
 
     mainElement: ShadowRoot|HTMLElement|null = null

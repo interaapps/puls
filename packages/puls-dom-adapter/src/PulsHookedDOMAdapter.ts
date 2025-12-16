@@ -162,7 +162,13 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
                 hook.setValue((el as any)[field]);
                 setListener()
             })
+
             ;(el as any)[field] = hook.value
+
+            this.postRenderQueue.push(() => {
+                ;(el as any)[field] = hook.value
+            })
+
             return
         }
 
@@ -275,6 +281,16 @@ export class PulsHookedDOMAdapter extends PulsDOMAdapter {
         if (this.elementListeners.has(el1)) {
             this.elementListeners.get(el1)?.forEach(l => l())
             this.elementListeners.delete(el1)
+        }
+    }
+
+    replaceElements(oldEls: ChildNode[], elements: ChildNode[]) {
+        super.replaceElements(oldEls, elements);
+        for (const el1 of oldEls) {
+            if (this.elementListeners.has(el1)) {
+                this.elementListeners.get(el1)?.forEach(l => l())
+                this.elementListeners.delete(el1)
+            }
         }
     }
 

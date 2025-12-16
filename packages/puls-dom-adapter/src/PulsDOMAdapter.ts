@@ -7,7 +7,8 @@ import {
     OnUnmounted,
     PulsAdapter,
     resetLifecycleHooks,
-    currentLifecycleDefines, removeLifecycleHooksFromInstance
+    currentLifecycleDefines,
+    removeLifecycleHooksFromInstance
 } from "pulsjs-adapter";
 
 export type ValueTransformer<T> = {
@@ -24,6 +25,8 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
     documentOverride: Document|null = null
 
     inSVG = false
+
+    postRenderQueue: (() => void)[] = []
 
     get document(): Document {
         return this.documentOverride ?? window.document
@@ -96,10 +99,10 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
 
                     lifeCycleHooks.onMount.forEach((fn: OnMount) => fn())
 
-                    lifeCycleComment.addEventListener(':attached', (e) => lifeCycleHooks.onMounted.forEach((fn: OnUnmount) => fn()))
+                    lifeCycleComment.addEventListener(':attached', (e) => lifeCycleHooks.onMounted.forEach((fn: OnMounted) => fn()))
                     lifeCycleComment.addEventListener(':detach', () => lifeCycleHooks.onUnmount.forEach((fn: OnUnmount) => fn()))
                     lifeCycleComment.addEventListener(':detached', () => {
-                        lifeCycleHooks.onUnmounted.forEach((fn: OnUnmount) => fn())
+                        lifeCycleHooks.onUnmounted.forEach((fn: OnUnmounted) => fn())
                     })
                 }
 
@@ -451,6 +454,9 @@ export class PulsDOMAdapter extends PulsAdapter<Node[]>{
     }
 
     render(): Node[] {
-        return this.parsed.map(p => this.addPart(p)).flat().filter(c => c)
+        this.postRenderQueue = []
+        const result = this.parsed.map(p => this.addPart(p)).flat().filter(c => c)
+        this.postRenderQueue.forEach(fn => fn())
+        return result
     }
 }
